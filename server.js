@@ -169,5 +169,7 @@ app.post('/api/ia-asistente', (req, res) => {
 
     res.json({ respuesta });
 });
+// Cambiamos el puerto fijo por el puerto dinámico que exige Render en internet
+const PORT = process.env.PORT || 5000;
 
-app.listen(5000, () => console.log("Servidor de SupplierNi corriendo en puerto 5000"));
+app.listen(PORT, () => console.log(`Servidor de SupplierNi corriendo exitosamente en el puerto ${PORT}`));
