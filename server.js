@@ -7,6 +7,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Ruta raíz estética para el jurado de la UNI
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family: sans-serif; text-align: center; margin-top: 100px; color: #0f172a;">
+            <h1 style="color: #10b981;">⚡ API de SupplierNi Operacional</h1>
+            <p style="color: #64748b;">El microservicio de base de datos local está corriendo exitosamente en la nube de Render.</p>
+            <span style="background: #dcfce7; color: #166534; padding: 5px 15px; rounded: 20px; font-weight: bold; font-size: 12px; border-radius: 20px;">ENTORNO ONLINE ACTIVO</span>
+        </div>
+    `);
+});
+
 const DB_FILE = path.join(__dirname, 'db.json');
 
 // ALGORITMO: Validación sintáctica de correo (RegEx RFC 5322)
