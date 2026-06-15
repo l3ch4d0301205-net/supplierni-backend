@@ -7,77 +7,96 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Ruta raíz estética para el jurado de la UNI
-app.get('/', (req, res) => {
-    res.send(`
-        <div style="font-family: sans-serif; text-align: center; margin-top: 100px; color: #0f172a;">
-            <h1 style="color: #10b981;">⚡ API de SupplierNi Operacional</h1>
-            <p style="color: #64748b;">El microservicio de base de datos local está corriendo exitosamente en la nube de Render.</p>
-            <span style="background: #dcfce7; color: #166534; padding: 5px 15px; rounded: 20px; font-weight: bold; font-size: 12px; border-radius: 20px;">ENTORNO ONLINE ACTIVO</span>
-        </div>
-    `);
-});
-
 const DB_FILE = path.join(__dirname, 'db.json');
 
-// ALGORITMO: Validación sintáctica de correo (RegEx RFC 5322)
+// ALGORITMO 1: Validación sintáctica de formato de correo (RegEx RFC 5322)
 const validarFormatoCorreo = (correo) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(correo);
 };
 
+// Semilla inicial con los rubros oficiales de tu tesis
+const semillaInicial = {
+    usuarios: [
+        { correo: "proveedor@gmail.com", contrasena: "1234", rol: "PROVEEDOR", nombre: "Distribuidora Mayorista del Pacífico", estado: "VERIFICADO", codigo_verificacion: null },
+        { correo: "comprador@gmail.com", contrasena: "1234", rol: "COMPRADOR", nombre: "Ferretería y Farmacia La Esperanza", estado: "VERIFICADO", codigo_verificacion: null }
+    ],
+    productos: [
+        { id_producto: 1, nombre_articulo: "Amoxicilina 500mg (Caja x 100 tabs)", precio_mayorista: 12.50, stock_disponible: 40, categoria: "Farmacia" },
+        { id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)", precio_mayorista: 8.00, stock_disponible: 25, categoria: "Farmacia" },
+        { id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper", precio_mayorista: 6.50, stock_disponible: 15, categoria: "Ferretería" },
+        { id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)", precio_mayorista: 11.20, stock_disponible: 100, categoria: "Ferretería" }
+    ],
+    pedidos: []
+};
+
+// COMPUERTA AUTO-REPARABLE: Evita que el servidor muera si el JSON se corrompe en Render
 const leerBaseDatos = () => {
     if (!fs.existsSync(DB_FILE)) {
-        // PARCHE: Las cuentas por defecto ya nacen con estado VERIFICADO
-        const datosIniciales = {
-            usuarios: [
-                { correo: "proveedor@gmail.com", contrasena: "1234", rol: "PROVEEDOR", nombre: "Distribuidora Mayorista del Pacífico", estado: "VERIFICADO", codigo_verificacion: null },
-                { correo: "comprador@gmail.com", contrasena: "1234", rol: "COMPRADOR", nombre: "Ferretería y Farmacia La Esperanza", estado: "VERIFICADO", codigo_verificacion: null }
-            ],
-            productos: [
-                { id_producto: 1, nombre_articulo: "Amoxicilina 500mg (Caja x 100 tabs)", precio_mayorista: 12.50, stock_disponible: 40, categoria: "Farmacia" },
-                { id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)", precio_mayorista: 8.00, stock_disponible: 25, categoria: "Farmacia" },
-                { id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper", precio_mayorista: 6.50, stock_disponible: 15, categoria: "Ferretería" },
-                { id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)", precio_mayorista: 11.20, stock_disponible: 100, categoria: "Ferretería" }
-            ],
-            pedidos: []
-        };
-        fs.writeFileSync(DB_FILE, JSON.stringify(datosIniciales, null, 2));
-        return datosIniciales;
+        fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
+        return semillaInicial;
     }
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+    try {
+        const contenido = fs.readFileSync(DB_FILE, 'utf-8');
+        const datos = JSON.parse(contenido);
+        // Si el archivo existe pero se quedó sin las llaves principales, lo repara en vivo
+        if (!datos.usuarios || !datos.productos || !datos.pedidos) {
+            fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
+            return semillaInicial;
+        }
+        return datos;
+    } catch (error) {
+        // Si da error de parseo (JSON vacío), se auto-corrige con la semilla
+        fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
+        return semillaInicial;
+    }
 };
 
 const guardarBaseDatos = (datos) => {
     fs.writeFileSync(DB_FILE, JSON.stringify(datos, null, 2));
 };
 
-// 1. REGISTRO + Algoritmo de Generación de Código OTP
-app.post('/api/registro', (req, res) => {
-    const { correo, contrasena, rol, nombre } = req.body;
-    
-    if (!validarFormatoCorreo(correo)) {
-        return res.status(400).json({ exito: false, error: "Formato de correo inválido." });
-    }
-
-    const db = leerBaseDatos();
-    if (db.usuarios.find(u => u.correo === correo)) {
-        return res.status(400).json({ exito: false, error: "Este correo comercial ya existe." });
-    }
-
-    const tokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-    db.usuarios.push({
-        correo, contrasena, rol, nombre,
-        estado: "PENDIENTE_VERIFICACION",
-        codigo_verificacion: tokenOTP
-    });
-    guardarBaseDatos(db);
-
-    res.json({ exito: true, mensaje: "Registro exitoso.", codigo_simulado: tokenOTP });
+// Ruta raíz de presentación estética para el jurado de la UNI
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family: sans-serif; text-align: center; margin-top: 100px; color: #0f172a;">
+            <h1 style="color: #10b981;">⚡ API de SupplierNi Operacional</h1>
+            <p style="color: #64748b;">El microservicio de base de datos local está corriendo exitosamente en la nube de Render.</p>
+            <span style="background: #dcfce7; color: #166534; padding: 5px 15px; font-weight: bold; font-size: 12px; border-radius: 20px;">ENTORNO ONLINE ACTIVO</span>
+        </div>
+    `);
 });
 
-// 2. VERIFICACIÓN TOKEN OTP
+// 1. ENDPOINT: Registro + Algoritmo de Generación de Código OTP
+app.post('/api/registro', (req, res) => {
+    try {
+        const { correo, contrasena, rol, nombre } = req.body;
+        
+        if (!validarFormatoCorreo(correo)) {
+            return res.status(400).json({ exito: false, error: "Formato de correo inválido." });
+        }
+
+        const db = leerBaseDatos();
+        if (db.usuarios.find(u => u.correo === correo)) {
+            return res.status(400).json({ exito: false, error: "Este correo comercial ya existe." });
+        }
+
+        const tokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+        db.usuarios.push({
+            correo, contrasena, rol, nombre,
+            estado: "PENDIENTE_VERIFICACION",
+            codigo_verificacion: tokenOTP
+        });
+        guardarBaseDatos(db);
+
+        res.json({ exito: true, mensaje: "Registro exitoso.", codigo_simulado: tokenOTP });
+    } catch (err) {
+        res.status(500).json({ exito: false, error: "Error en la capa de persistencia del servidor." });
+    }
+});
+
+// 2. ENDPOINT: Verificación Token OTP
 app.post('/api/verificar', (req, res) => {
     const { correo, codigo } = req.body;
     const db = leerBaseDatos();
@@ -96,7 +115,7 @@ app.post('/api/verificar', (req, res) => {
     res.json({ exito: true, mensaje: "¡Cuenta validada exitosamente!" });
 });
 
-// 3. LOGIN CON COMPUERTA DE SEGURIDAD
+// 3. ENDPOINT: Login con Compuerta de Seguridad por Estado
 app.post('/api/login', (req, res) => {
     const { correo, contrasena } = req.body;
     const db = leerBaseDatos();
@@ -118,13 +137,12 @@ app.post('/api/login', (req, res) => {
     res.json({ exito: true, usuario });
 });
 
-// 4. OBTENER PRODUCTOS
+// 4. ENDPOINT: Obtener Catálogo Completo
 app.get('/api/productos', (req, res) => {
-    const db = leerBaseDatos();
-    res.json(db.productos);
+    res.json(leerBaseDatos().productos);
 });
 
-// 5. CARGAR PRODUCTO
+// 5. ENDPOINT: Cargar Producto al Catálogo (Gobernado por Rol en Frontend)
 app.post('/api/productos', (req, res) => {
     const { nombre_articulo, precio_mayorista, stock_disponible, categoria } = req.body;
     const db = leerBaseDatos();
@@ -140,7 +158,7 @@ app.post('/api/productos', (req, res) => {
     res.json({ exito: true });
 });
 
-// 6. PROCESAR PEDIDO
+// 6. ENDPOINT: Procesar Pedido y Restar Stock Físico
 app.post('/api/pedidos', (req, res) => {
     const { id_comprador, items, total_neto } = req.body;
     const db = leerBaseDatos();
@@ -160,7 +178,7 @@ app.post('/api/pedidos', (req, res) => {
     res.json({ exito: true, mensaje: "¡Pedido procesado e inventario actualizado!" });
 });
 
-// 7. ASISTENTE DE IA (Métricas de la Tesis)
+// 7. ENDPOINT: Asistente de IA (Inferencia de Métricas Macroeconómicas)
 app.post('/api/ia-asistente', (req, res) => {
     const { mensaje } = req.body;
     const msg = mensaje.toLowerCase();
@@ -180,7 +198,7 @@ app.post('/api/ia-asistente', (req, res) => {
 
     res.json({ respuesta });
 });
-// Cambiamos el puerto fijo por el puerto dinámico que exige Render en internet
-const PORT = process.env.PORT || 5000;
 
+// Configuración de asignación de puertos dinámicos para entornos cloud (Render)
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor de SupplierNi corriendo exitosamente en el puerto ${PORT}`));
