@@ -55,13 +55,16 @@ const guardarBaseDatos = (datos) => {
     fs.writeFileSync(DB_FILE, JSON.stringify(datos, null, 2));
 };
 
-// CONFIGURACIÓN DEL TRANSPORTADOR SMTP (Se conecta al correo emisor usando variables de entorno)
+// CONFIGURACIÓN DEL TRANSPORTADOR SMTP SANITIZADO (Quita espacios automáticos del token de Google)
 const configurarTransporterB2B = () => {
+    const cuentaEmisora = process.env.EMAIL_USER;
+    const tokenAplicacion = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : ''; 
+
     return nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER, // Tu correo de Gmail en las variables de Render
-            pass: process.env.EMAIL_PASS  // Tu contraseña de aplicación de Gmail
+            user: cuentaEmisora, 
+            pass: tokenAplicacion  
         }
     });
 };
@@ -234,7 +237,7 @@ app.post('/api/pedidos', async (req, res) => {
                 <div style="font-family:sans-serif; max-width:500px; margin:0 auto; padding:20px; border:1px solid #e2e8f0; border-radius:16px;">
                     <h2 style="color:#0f172a; text-align:center; margin-bottom:5px;">SupplierNi B2B</h2>
                     <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">Comprobante Digital de Pedido #Ref-${numRef}</p>
-                    <hr style="border:0; border-top:1px dashed #cbd5e1; my:15px;">
+                    <hr style="border:0; border-top:1px dashed #cbd5e1; margin:15px 0;">
                     <table style="width:100%; font-size:12px; color:#334155; border-collapse:collapse;">
                         <tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Artículo</th><th style="padding:8px;">Cant</th><th style="padding:8px; text-align:right;">Subtotal</th></tr>
                         ${filasHtml}
@@ -272,7 +275,7 @@ app.post('/api/pedidos', async (req, res) => {
     });
 });
 
-// 7. ENDPOINT: Asistente con Conexión Real a Google Gemini (Cero paja de VAN/TIR/ROI, 100% transaccional)
+// 7. ENDPOINT: Asistente con Conexión Real a Google Gemini (Cero paja de VAN/TIR/ROI, con Filtro de Markdown)
 app.post('/api/ia-asistente', async (req, res) => {
     const { mensaje, rol } = req.body;
     const msg = mensaje ? mensaje.toLowerCase().trim() : "";
@@ -291,11 +294,11 @@ app.post('/api/ia-asistente', async (req, res) => {
 
             PROHIBICIÓN CRÍTICA ABSOLUTA: No muestres, no calcules, ni hables de parámetros de ingeniería económica como el VAN, la TIR o el ROI. Queda rotundamente prohibido usar esas siglas o paja teórica corporativa. Concéntrate en la logística y el carrito.
 
-            REGLA DE CONTRATO JSON EXCLUSIVA: Debes responder única y exclusivamente un objeto JSON válido con este formato (elimina backticks de markdown exteriores):
+            REGLA DE CONTRATO JSON EXCLUSIVA: Debes responder única y exclusivamente un objeto JSON válido con este formato:
             {
               "respuesta": "Tu explicación analítica, comercial o predictiva en base a lo que el usuario preguntó.",
-              "items": [{"id_producto": 1, "cantidad": 5}], // Si el usuario es COMPRADOR y te pide explícitamente agregar o comprar insumos, extrae el ID y la cantidad sugerida aquí. Si no, ponlo vacío [].
-              "sugerencias": [{"id_producto": 2, "nombre_articulo": "Nombre"}] // Productos de venta cruzada relacionados si aplica, si no [].
+              "items": [{"id_producto": 1, "cantidad": 5}], 
+              "sugerencias": [{"id_producto": 2, "nombre_articulo": "Nombre"}] 
             }
 
             Consulta del usuario: "${mensaje}"`;
@@ -344,15 +347,17 @@ app.post('/api/ia-asistente', async (req, res) => {
                 const aiData = await apiResponse.json();
                 let jsonText = aiData.candidates[0].content.parts[0].text.trim();
                 
+                // LIMPIADOR AUTOMÁTICO DE BLOQUES MARKDOWN: Evita que JSON.parse rompa el flujo y salte al fallback
                 if (jsonText.startsWith("```")) {
                     jsonText = jsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
                 }
                 
                 return res.json(JSON.parse(jsonText));
             }
-        } catch (e) { }
+        } catch (e) { /* Si la API de Google falla, pasa suavemente al motor local de contingencia */ }
     }
 
+    // MOTOR DE CONTINGENCIA DINÁMICO SANITIZADO (Fallback Local)
     let respuestaText = "";
     let itemsDetectados = [];
     let sugerenciasCruzadas = [];
@@ -386,5 +391,6 @@ app.post('/api/ia-asistente', async (req, res) => {
     res.json({ respuesta: respuestaText, items: itemsDetectados, sugerencias: sugerenciasCruzadas });
 });
 
+// Configuración de puertos dinámicos para la nube de Render
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor de SupplierNi corriendo exitosamente en el puerto ${PORT}`));
