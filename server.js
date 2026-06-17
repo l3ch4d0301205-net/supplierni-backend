@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer'); // Librería oficial para envíos reales por SMTP
 
 const app = express();
 app.use(cors());
@@ -52,6 +53,17 @@ const leerBaseDatos = () => {
 
 const guardarBaseDatos = (datos) => {
     fs.writeFileSync(DB_FILE, JSON.stringify(datos, null, 2));
+};
+
+// CONFIGURACIÓN DEL TRANSPORTADOR SMTP (Se conecta al correo emisor usando variables de entorno)
+const configurarTransporterB2B = () => {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER, // Tu correo de Gmail en las variables de Render
+            pass: process.env.EMAIL_PASS  // Tu contraseña de aplicación de Gmail
+        }
+    });
 };
 
 // Presentación corporativa en la raíz de la API para el jurado de la UNI
@@ -149,7 +161,7 @@ app.get('/api/productos', (req, res) => {
     res.json(leerBaseDatos().productos);
 });
 
-// 5. ENDPOINT: Cargar Producto Autogestionado por el Proveedor (Indexación de fotos y stocks)
+// 5. ENDPOINT: Cargar Producto Autogestionado por el Proveedor
 app.post('/api/productos', (req, res) => {
     try {
         const { nombre_articulo, precio_mayorista, stock_disponible, categoria, imagen_url, creado_por } = req.body;
@@ -173,8 +185,8 @@ app.post('/api/productos', (req, res) => {
     }
 });
 
-// 6. ENDPOINT: Procesar Pedidos, Facturación Digital por Email y Coordenadas Bancarias de Nicaragua
-app.post('/api/pedidos', (req, res) => {
+// 6. ENDPOINT: Procesar Pedidos, Decremento de Stock y ENVÍO REAL DE CORREO POR SMTP
+app.post('/api/pedidos', async (req, res) => {
     const { id_comprador, items, total_neto, terminos_pago, email_despacho } = req.body;
     const db = leerBaseDatos();
 
@@ -188,12 +200,13 @@ app.post('/api/pedidos', (req, res) => {
         }
     }
 
-    // Decremento físico real del archivo plano indexado
+    // Decremento real del inventario plano
     for (const item of items) {
         const prod = db.productos.find(p => p.id_producto === item.id_producto);
         if (prod) prod.stock_disponible -= item.cantidad;
     }
 
+    const numRef = Math.floor(100000 + Math.random() * 900000);
     const nuevoPedido = { 
         id_pedido: db.pedidos.length + 1, 
         id_comprador, 
@@ -206,11 +219,52 @@ app.post('/api/pedidos', (req, res) => {
     db.pedidos.push(nuevoPedido);
     guardarBaseDatos(db);
 
+    // MÓDULO ALGORÍTMICO SMTP: Construcción y envío del correo real
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        try {
+            const transporter = configurarTransporterB2B();
+            
+            // Construcción dinámica de las líneas de la factura en HTML
+            let filasHtml = "";
+            items.forEach(i => {
+                filasHtml += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${i.nombre_articulo}</td><td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${i.cantidad}</td><td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">$${(i.precio_mayorista * i.cantidad).toFixed(2)}</td></tr>`;
+            });
+
+            const estructuraHtmlEmail = `
+                <div style="font-family:sans-serif; max-width:500px; margin:0 auto; padding:20px; border:1px solid #e2e8f0; border-radius:16px;">
+                    <h2 style="color:#0f172a; text-align:center; margin-bottom:5px;">SupplierNi B2B</h2>
+                    <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">Comprobante Digital de Pedido #Ref-${numRef}</p>
+                    <hr style="border:0; border-top:1px dashed #cbd5e1; my:15px;">
+                    <table style="width:100%; font-size:12px; color:#334155; border-collapse:collapse;">
+                        <tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Artículo</th><th style="padding:8px;">Cant</th><th style="padding:8px; text-align:right;">Subtotal</th></tr>
+                        ${filasHtml}
+                    </table>
+                    <div style="margin-top:20px; text-align:right; font-size:14px; font-weight:bold; color:#0f172a;">TOTAL COMPROMETIDO: $${total_neto.toFixed(2)} USD</div>
+                    <div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:12px; margin-top:20px; font-size:11px; color:#78350f;">
+                        <strong>Instrucciones Oficiales de Depósito Bancario:</strong><br>
+                        • Banco LAFISE Bancentro: 134070030 (Córdobas NIO)<br>
+                        • Banco BANPRO: 10022341054 (Dólares USD)
+                    </div>
+                    <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:25px;">Henry Lechado | Angel Tercero | Lester Lopez<br>Ingeniería de Software - UNI Nicaragua</p>
+                </div>
+            `;
+
+            await transporter.sendMail({
+                from: `"SupplierNi B2B" <${process.env.EMAIL_USER}>`,
+                to: email_despacho,
+                subject: `📋 Comprobante de Pedido #SP-${nuevoPedido.id_pedido} - SupplierNi`,
+                html: estructuraHtmlEmail
+            });
+            console.log(`Factura enviada exitosamente a: ${email_despacho}`);
+        } catch (error) {
+            console.error("Error en despacho SMTP:", error);
+        }
+    }
+
     // RETORNO DE CREDENCIALES FINANCIERAS REALES DE NICARAGUA E INFORME DE DESPACHO
     res.json({ 
         exito: true, 
         pedido: nuevoPedido,
-        mensaje_email: `Factura digital despachada y enviada exitosamente al canal corporativo: ${email_despacho}`,
         coordenadas_bancarias: [
             { banco: "Banco LAFISE Bancentro", cuenta: "134070030", moneda: "Córdobas (NIO)", tipo: "Cuenta Corriente Empresarial" },
             { banco: "Banco BANPRO", cuenta: "10022341054", moneda: "Dólares (USD)", tipo: "Cuenta de Ahorros" }
@@ -290,17 +344,15 @@ app.post('/api/ia-asistente', async (req, res) => {
                 const aiData = await apiResponse.json();
                 let jsonText = aiData.candidates[0].content.parts[0].text.trim();
                 
-                // Limpiador atómico contra desborde de backticks de Markdown en respuestas JSON
                 if (jsonText.startsWith("```")) {
                     jsonText = jsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
                 }
                 
                 return res.json(JSON.parse(jsonText));
             }
-        } catch (e) { /* Si se cae el enlace con Google, el hilo salta automáticamente a la contingencia */ }
+        } catch (e) { }
     }
 
-    // MOTOR DE CONTINGENCIA LOCAL EXCLUSIVO (Sanitizado sin VAN/TIR/ROI)
     let respuestaText = "";
     let itemsDetectados = [];
     let sugerenciasCruzadas = [];
@@ -322,7 +374,6 @@ app.post('/api/ia-asistente', async (req, res) => {
             respuestaText = "Hola Henry. Indíqueme de forma abierta qué insumos médicos o materiales de construcción requiere su comercio y estructuraré las casillas de su carrito de forma automática.";
         }
     } else {
-        // ROL PROVEEDOR: Respuestas predictivas geográficas y de rotación mercantil de Nicaragua
         if (msg.includes("vendido") || msg.includes("venta") || msg.includes("rotacion") || msg.includes("producto")) {
             respuestaText = "📊 **Análisis Predictivo de Plaza:** Las métricas registradas en base de datos reflejan que el artículo con mayor índice de rotación en la línea de construcción de todo el país es el **Saco de Cemento Canal**, mientras que en la línea clínica el liderazgo lo conserva la **Amoxicilina 500mg**.";
         } else if (msg.includes("zona") || msg.includes("lugar") || msg.includes("demanda") || msg.includes("managua") || msg.includes("chinandega") || msg.includes("leon")) {
@@ -335,6 +386,5 @@ app.post('/api/ia-asistente', async (req, res) => {
     res.json({ respuesta: respuestaText, items: itemsDetectados, sugerencias: sugerenciasCruzadas });
 });
 
-// Asignación dinámica de puertos para la infraestructura cloud de Render
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor de SupplierNi corriendo exitosamente en el puerto ${PORT}`));
