@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupplierNi B2B</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PALETA Y ANIMACIONES SUAVIZADAS TORNASOL TIPO OLAS -->
+    <style>
+        @keyframes olasTornasol {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-tornasol-fondo {
+            background: linear-gradient(-45deg, #f8fafc, #f1f5f9, #e2e8f0, #e0f2fe, #dcfce7, #ccfbf1, #f8fafc);
+            background-size: 400% 400%;
+            animation: olasTornasol 16s ease infinite;
+        }
+        
+        .animate-tornasol-nav {
+            background: linear-gradient(-45deg, #0f172a, #1e293b, #065f46, #0f766e, #1e293b, #0f172a);
+            background-size: 400% 400%;
+            animation: olasTornasol 12s ease infinite;
+        }
+        
+        .animate-tornasol-btn {
+            background: linear-gradient(-45deg, #10b981, #059669, #0d9488, #0f766e, #10b981);
+            background-size: 300% 300%;
+            animation: olasTornasol 4s ease infinite;
+            transition: all 0.3s ease;
+        }
+
+        .animate-tornasol-btn:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="animate-tornasol-fondo min-h-screen font-sans flex flex-col justify-between transition-all">
+
+    <!-- CONTENEDOR MAESTRO DE MENSAJES BOX (TOASTS INTERACTIVOS DINÁMICOS) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none w-full max-w-sm px-4"></div>
+
+    <!-- ==========================================
+         1. CAPA DE AUTENTICACIÓN CENTRAL e HIGIENE
+         ========================================== -->
+    <div id="seccion-auth" class="flex items-center justify-center flex-grow px-4 my-10">
+        <div class="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl border w-full max-w-md relative">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">SupplierNi</h2>
+                <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-full uppercase tracking-wider mt-2 inline-block border">Plataforma Mayorista Nacional</span>
+            </div>
+            
+            <!-- FORMULARIO: INICIO DE SESIÓN -->
+            <form id="form-login" onsubmit="ejecutarLogin(event)" class="space-y-4 block">
+                <h3 class="text-base font-bold text-slate-800 border-b pb-1">Iniciar Sesión</h3>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Corporativo:</label>
+                    <input type="email" id="login-correo" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50 font-medium text-slate-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña de Acceso:</label>
+                    <input type="password" id="login-pass" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50">
+                </div>
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-sm transition-all tracking-wide">AUTENTICAR EN SERVIDOR</button>
+                <p class="text-xs text-center text-slate-500 pt-2">¿Empresa nueva en la red? <button type="button" onclick="cambiarFormularioAuth('registro')" class="text-emerald-500 font-bold hover:underline">Registrarse en el País</button></p>
+            </form>
+
+            <!-- FORMULARIO: REGISTRO MAESTRO -->
+            <form id="form-registro" onsubmit="ejecutarRegistro(event)" class="space-y-4 hidden">
+                <h3 class="text-base font-bold text-slate-800 border-b pb-1">Registro de Razón Social</h3>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre Comercial de la Empresa:</label>
+                    <input type="text" id="reg-nombre" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50" placeholder="Ej: Farmacia Saba / Ferretería León">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Correo Electrónico Corporativo:</label>
+                    <input type="text" id="reg-correo" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50" placeholder="empresa@dominio.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña:</label>
+                    <input type="password" id="reg-pass" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Rol Operativo Institucional:</label>
+                    <select id="reg-rol" class="w-full p-3 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none font-medium text-slate-700">
+                        <option value="COMPRADOR">Comprador (Dueño de Farmacia / Ferretería local)</option>
+                        <option value="PROVEEDOR">Proveedor Mayorista (Distribuidor / Fábrica)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full animate-tornasol-btn text-white font-bold py-3 rounded-xl shadow-md text-sm tracking-wide">EJECUTAR REGISTRO ALGORÍTMICO</button>
+                <p class="text-xs text-center text-slate-500 pt-2">¿Ya pertenece a la red? <button type="button" onclick="cambiarFormularioAuth('login')" class="text-slate-900 font-bold hover:underline">Volver al Login</button></p>
+            </form>
+
+            <!-- FORMULARIO: PASARELA OTP DE CONTROL -->
+            <form id="form-verificacion" onsubmit="ejecutarVerificacionOTP(event)" class="space-y-4 hidden">
+                <h3 class="text-base font-bold text-slate-800 border-b pb-1 text-center">Verificación Obligatoria</h3>
+                <div id="box-otp-visual-uni" class="bg-amber-50 border border-amber-200 text-amber-900 p-3 rounded-xl text-xs font-medium text-center leading-relaxed my-2 hidden"></div>
+                <p class="text-xs text-center text-slate-500 leading-relaxed">Código numérico OTP generado en la bitácora del servidor. Ingréselo para activar sus credenciales de acceso.</p>
+                <div class="pt-2">
+                    <input type="text" id="otp-codigo" maxlength="6" required class="w-full p-4 border rounded-xl text-center text-2xl font-black tracking-widest focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50 text-slate-800" placeholder="000000">
+                </div>
+                <button type="submit" class="w-full bg-slate-950 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-sm transition-all tracking-wide">VALIDAR TOKEN EN SERVIDOR</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         2. ENTORNO EN VIVO PRINCIPAL DE CONTROL
+         ========================================== -->
+    <div id="seccion-sistema" class="hidden flex-grow flex flex-col">
+        <nav class="flex justify-between items-center animate-tornasol-nav text-white px-6 py-4 shadow-lg border-b border-slate-800">
+            <div>
+                <h1 class="text-2xl font-black tracking-wider">SupplierNi <span class="text-emerald-400 font-bold">B2B</span></h1>
+                <p id="usr-metadata" class="text-[10px] text-slate-400 font-mono tracking-tight mt-0.5 uppercase bg-slate-800 px-2 py-0.5 rounded border border-slate-700 w-fit"></p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div id="barra-botones-nav" class="space-x-1"></div>
+                <button onclick="cerrarSesion()" class="bg-red-50/20 text-red-300 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-red-500/20 shadow-sm">Cerrar Sistema</button>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto p-6 flex-grow w-full">
+            
+            <!-- VISTA A: PERFIL COMPRADOR (MARKETPLACE CON SELECCIÓN NUMÉRICA DE BODEGA RECALCULADA) -->
+            <div id="vista-marketplace" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <!-- Cuadrícula de Productos Activos -->
+                    <div class="lg:col-span-3">
+                        <h2 class="text-lg font-bold text-slate-800 mb-6 border-b pb-2 flex items-center justify-between">
+                            <span>Catálogo Maestro de Abastecimiento Mayorista</span>
+                            <span class="text-xs font-normal text-slate-400 font-mono">Moneda de Liquidación: USD</span>
+                        </h2>
+                        <div id="grid-productos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                    </div>
+
+                    <!-- Panel del Carrito de Líneas de Orden -->
+                    <div class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-md border border-slate-200 h-fit flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider">Líneas de Pedido</h3>
+                                <button onclick="vaciarCarritoCompleto()" class="text-[11px] text-red-500 font-bold hover:text-red-700 transition-colors flex items-center space-x-1">
+                                    <span>Vaciar todo</span>
+                                </button>
+                            </div>
+                            <div id="box-carrito" class="space-y-3 max-h-64 overflow-y-auto mb-4 text-xs text-slate-400 italic">No hay productos seleccionados.</div>
+                            
+                            <!-- CONFIGURACIÓN DE TÉRMINOS B2B -->
+                            <div class="mb-4 pt-3 border-t border-slate-100">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Término y Canal Comercial:</label>
+                                <select id="checkout-metodo-pago" class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 focus:outline-none text-slate-700 font-bold">
+                                    <option value="Transferencia Bancaria Inmediata (LAFISE / Banpro)">Transferencia Bancaria Inmediata (LAFISE / Banpro)</option>
+                                    <option value="Crédito Mayorista Avalado (Neto a 30 días)">Crédito Mayorista Avalado (Neto a 30 días)</option>
+                                    <option value="Cheque Comercial de Gerencia contra Entrega">Cheque Comercial de Gerencia contra Entrega</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="border-t pt-4">
+                            <div class="flex justify-between font-black text-sm text-slate-900 mb-4">
+                                <span>TOTAL DE LA ORDEN:</span>
+                                <span>$<span id="total-car">0.00</span> USD</span>
+                            </div>
+                            <button onclick="abrirModalDespachoEmail()" class="w-full animate-tornasol-btn text-white font-bold py-3 rounded-xl shadow-md text-xs tracking-wider uppercase">
+                                PROCESAR COMPRA Y EMITIR COMPROBANTE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA B: PERFIL PROVEEDOR (CARGA AUTÓNOMA DE CATÁLOGOS CON IMÁGENES) -->
+            <div id="vista-proveedor" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Formulario de Inyección Física -->
+                    <div class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200 h-fit">
+                        <h2 class="text-base font-black text-slate-900 mb-4 border-b pb-2 uppercase tracking-wide">Indexar Producto al Catálogo</h2>
+                        <form onsubmit="registrarProductoCatalogo(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Rubro de la Industria:</label>
+                                <select id="prod-cat" class="w-full p-3 border rounded-xl bg-white text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400">
+                                    <option value="Farmacia">Línea Farmacéutica (Medicamentos / Clínico)</option>
+                                    <option value="Ferretería">Línea Ferretera (Herramientas / Construcción)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Descripción Técnica del Artículo:</label>
+                                <input type="text" id="prod-nombre" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 font-medium" placeholder="Ej: Acetaminofén 500mg MK / Pala Cuadrada Tramontina">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Costo Neto (USD):</label>
+                                    <input type="number" step="0.01" id="prod-precio" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-center font-bold" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Existencias Iniciales:</label>
+                                    <input type="number" id="prod-stock" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-center font-bold" placeholder="0">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL de la Imagen o Fotografía del Artículo:</label>
+                                <input type="url" id="prod-img" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-xs text-slate-600 font-mono" placeholder="https://ejemplo.com/foto.jpg">
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-xs tracking-wider uppercase transition-all">INYECTAR PRODUCTO EN BASE DE DATOS</button>
+                        </form>
+                    </div>
+
+                    <!-- Listado Analítico del Proveedor -->
+                    <div class="lg:col-span-2 bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200">
+                        <h2 class="text-base font-black text-slate-900 mb-4 border-b pb-2 uppercase tracking-wide">Mis Artículos Distribuidos en la Red</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-900 text-white uppercase text-[10px] tracking-wider">
+                                        <th class="p-3 rounded-l-lg">ID</th>
+                                        <th class="p-3">Artículo</th>
+                                        <th class="p-3">Categoría</th>
+                                        <th class="p-3 text-center">Precio</th>
+                                        <th class="p-3 text-center rounded-r-lg">Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-productos-proveedor" class="text-slate-700 divide-y font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA C: DASHBOARD DE MÉTRICAS FINANCIERAS -->
+            <div id="vista-ia" class="hidden">
+                <h2 class="text-xl font-black text-slate-800 mb-1 border-b pb-2">Matriz de Evaluación Económica y Viabilidad Corporativa</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center shadow-md"><p class="text-xs font-bold text-slate-400 tracking-wider uppercase">VALOR ACTUAL NETO (VAN)</p><h3 class="text-3xl font-black text-slate-900 my-3">$8,819.91 <span class="text-xs text-slate-400 font-normal">USD</span></h3><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">Proyecto Altamente Viable (VAN &gt; 0)</span></div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center shadow-md"><p class="text-xs font-bold text-slate-400 tracking-wider uppercase">TASA INTERNA DE RETORNO (TIR)</p><h3 class="text-3xl font-black text-slate-900 my-3">43%</h3><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">Excede Costo de Oportunidad Base</span></div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center shadow-md"><p class="text-xs font-bold text-slate-400 tracking-wider uppercase">RETORNO DE LA INVERSIÓN (ROI)</p><h3 class="text-3xl font-black text-slate-900 my-3">380%</h3><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">Eficiencia Superior de Capital</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         3. MODAL: CAPTURA DE EMAIL PARA ENVÍO DIGITAL
+         ========================================== -->
+    <div id="modal-email-factura" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div class="text-center pb-2">
+                <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.68a2 2 0 012.22 0l8 5.68A2 2 0 0121 10.07V19a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 14l8.586-6.043a2 2 0 012.828 0L21 14" />
+                    </svg>
+                </div>
+                <h3 class="text-base font-black text-slate-900 uppercase tracking-tight">Despacho de Factura Digital</h3>
+                <p class="text-xs text-slate-400 mt-1">Escriba el correo corporativo donde se enviará el comprobante electrónico digital de la orden.</p>
+            </div>
+            <div class="my-4">
+                <input type="email" id="email-despacho-input" class="w-full p-3 border rounded-xl text-xs font-bold text-center bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" placeholder="correo@empresa.com">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="cerrarModalEmail()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-2.5 rounded-xl text-xs transition-colors">Cancelar</button>
+                <button onclick="confirmarPedidoB2B()" id="btn-confirmar-envio-email" class="w-2/3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs tracking-wide uppercase transition-all shadow-md">
+                    Enviar y Procesar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         4. MODAL: FACTURACIÓN PROFORMA E INYECCIÓN BANCARIA
+         ========================================== -->
+    <div id="modal-factura" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div class="text-center border-b pb-4">
+                <span class="text-[9px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-200">Aprobado y Sincronizado</span>
+                <h3 class="text-base font-black text-slate-900 mt-2 tracking-tight">DOCUMENTO PROFORMA DE COMPRA</h3>
+                <p class="text-[10px] font-mono text-slate-400 mt-0.5">Ref: #SP-<span id="factura-num">000000</span></p>
+            </div>
+            <div class="my-4 space-y-2 text-xs">
+                <div class="flex justify-between text-slate-500"><span>Entidad Adquirente:</span><strong class="text-slate-800 uppercase" id="factura-cliente">---</strong></div>
+                <div class="flex justify-between text-slate-500"><span>Canal de Pago:</span><strong class="text-slate-700 text-right max-w-[60%]" id="factura-metodo">---</strong></div>
+                <div class="flex justify-between text-slate-500"><span>Estampa Temporal:</span><strong class="text-slate-700" id="factura-fecha">---</strong></div>
+                <div class="flex justify-between text-slate-500"><span>Envío Digital:</span><strong class="text-emerald-600 font-mono text-[11px]" id="factura-envio-correo">---</strong></div>
+                
+                <div class="border-t border-dashed my-3 pt-3">
+                    <p class="font-bold text-slate-800 mb-1.5 uppercase tracking-wide text-[9px]">Líneas de Distribución Despachadas:</p>
+                    <div id="factura-items" class="space-y-1 text-slate-600 font-mono text-[11px]"></div>
+                </div>
+
+                <!-- COORDENADAS BANCARIAS REALES INYECTADAS POR EL SERVIDOR -->
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl space-y-1.5" id="bloque-bancos-factura">
+                    <p class="text-[10px] font-black text-amber-800 uppercase tracking-wider">Instrucción Oficial de Depósito / Transferencia:</p>
+                    <div id="lista-cuentas-bancarias" class="space-y-1 text-[11px] text-amber-900 font-medium font-mono"></div>
+                </div>
+
+                <div class="border-t pt-3 flex justify-between text-sm font-black text-slate-900">
+                    <span>TOTAL COMPROMETIDO NETO:</span>
+                    <span>$<span id="factura-total">0.00</span> USD</span>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl text-[10px] text-slate-400 text-center font-bold border border-dashed border-slate-200 mb-4 leading-relaxed">
+                Ingeniería de Software - UNI Nicaragua<br>
+                <span class="text-slate-600 font-mono font-medium">Henry Lechado | Angel Tercero | Lester Lopez</span>
+            </div>
+            <button onclick="cerrarModalFactura()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition-all shadow-md">
+                Cerrar Transacción y Actualizar Almacenes
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         5. UX ASISTENTE: BOTÓN FLOTANTE MINIMIZADO
+         ========================================== -->
+    <button id="btn-chat-ia-abrir" onclick="toggleAsistenteWidget(true)" class="hidden fixed bottom-5 right-5 bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-full shadow-2xl z-50 border border-slate-700 transition-all transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+    </button>
+
+    <!-- ==========================================
+         6. CENTRO DE INTELIGENCIA ARTIFICIAL GEMINI DE ALTA GAMA
+         ========================================== -->
+    <div id="asistente-chat-ui" class="hidden fixed bottom-5 right-5 w-85 sm:w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col z-50">
+        <div class="bg-slate-900 text-white p-3.5 font-bold text-xs flex justify-between items-center tracking-wide border-b border-slate-800">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="ia-titulo-contexto">Asistente Predictivo SupplierNi</span>
+            </div>
+            <button onclick="toggleAsistenteWidget(false)" class="text-slate-400 hover:text-white font-black text-xs px-2 py-1 hover:bg-slate-800 rounded-lg transition-all">✕</button>
+        </div>
+        
+        <!-- Registro de Mensajería -->
+        <div id="chat-logs" class="p-3 text-xs space-y-2 h-64 overflow-y-auto bg-slate-50 flex flex-col"></div>
+        
+        <!-- Franja Opcional de Venta Cruzada Sugerida por la IA -->
+        <div id="box-sugerencias-ia" class="px-3 py-2.5 bg-emerald-50 border-t text-[11px] font-bold text-emerald-800 hidden border-emerald-100"></div>
+        
+        <div class="p-2 border-t flex gap-1 bg-white">
+            <input type="text" id="chat-input" onkeypress="if(event.key==='Enter') enviarMensajeIA()" class="flex-grow p-2.5 border rounded-xl text-xs focus:outline-none bg-slate-50 text-slate-800 focus:ring-1 focus:ring-emerald-400 font-medium" placeholder="Escriba su consulta comercial...">
+            <button onclick="enviarMensajeIA()" class="bg-slate-900 text-white px-4 rounded-xl font-bold text-xs hover:bg-slate-800 transition-colors">Enviar</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         7. MOTOR JAVASCRIPT TRANSACCIONAL INTEGRADO
+         ========================================== -->
+    <script>
+        const API_URL = 'https://supplierni-backend.onrender.com/api';
+        let usuarioSesion = null;
+        let correoPendienteVerificacion = '';
+        let carrito = [];
+        let catalogoProductosGlobal = [];
+
+        // ALGORITMO: CONTROL DE MENSAJES BOX DE ALTA GAMA (Toast UI)
+        function notificar(mensaje, tipo = 'exito') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const fillBg = tipo === 'exito' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 shadow-emerald-100' : 'bg-red-50 border-red-200 text-red-800 shadow-red-100';
+            const iconSvg = tipo === 'exito' 
+                ? '<svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                : '<svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+
+            toast.className = `flex items-center gap-3 p-3.5 rounded-xl border text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 scale-95 duration-200 pointer-events-auto bg-white/95 backdrop-blur-sm ${fillBg}`;
+            toast.innerHTML = `${iconSvg}<div class="flex-grow">${mensaje}</div>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0', 'scale-95'); }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0', 'scale-95');
+                setTimeout(() => { toast.remove(); }, 200);
+            }, 3500);
+        }
+
+        function cambiarFormularioAuth(modo) {
+            document.getElementById('form-login').className = modo === 'login' ? 'space-y-4 block' : 'hidden';
+            document.getElementById('form-registro').className = modo === 'registro' ? 'space-y-4 block' : 'hidden';
+            document.getElementById('form-verificacion').className = modo === 'verificar' ? 'space-y-4 block' : 'hidden';
+        }
+
+        function toggleAsistenteWidget(abrir) {
+            document.getElementById('asistente-chat-ui').className = abrir ? 'fixed bottom-5 right-5 w-85 sm:w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col z-50 animate-in slide-in-from-bottom-5 duration-200' : 'hidden';
+            document.getElementById('btn-chat-ia-abrir').className = abrir ? 'hidden' : 'fixed bottom-5 right-5 bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-full shadow-2xl z-50 flex items-center justify-center border border-slate-700 transition-all';
+        }
+
+        async function ejecutarLogin(event) {
+            event.preventDefault();
+            const correo = document.getElementById('login-correo').value.trim();
+            const contrasena = document.getElementById('login-pass').value;
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo, contrasena })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    usuarioSesion = data.usuario;
+                    notificar(`¡Bienvenido a SupplierNi, ${usuarioSesion.nombre}!`);
+                    inicializarEntornoPlataforma();
+                } else {
+                    if (data.requiere_verificacion) {
+                        correoPendienteVerificacion = data.correo;
+                        notificar(data.error, 'error');
+                        cambiarFormularioAuth('verificar');
+                    } else { notificar(data.error, 'error'); }
+                }
+            } catch { notificar("El servidor se está despertando en la nube. Reintente por favor.", 'error'); }
+        }
+
+        async function ejecutarRegistro(event) {
+            event.preventDefault();
+            const nombre = document.getElementById('reg-nombre').value;
+            const correo = document.getElementById('reg-correo').value.trim();
+            const contrasena = document.getElementById('reg-pass').value;
+            const rol = document.getElementById('reg-rol').value;
+
+            try {
+                const res = await fetch(`${API_URL}/registro`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo, contrasena, rol, nombre })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    notificar("Algoritmo de registro correcto. Ingrese el token OTP.", 'exito');
+                    const boxOtp = document.getElementById('box-otp-visual-uni');
+                    boxOtp.innerText = `[ENTORNO DE SIMULACIÓN] Código OTP generado: ${data.codigo_simulado}`;
+                    boxOtp.classList.remove('hidden');
+                    correoPendienteVerificacion = correo;
+                    cambiarFormularioAuth('verificar');
+                } else { notificar(data.error, 'error'); }
+            } catch { notificar("Error de comunicación de red al registrar.", 'error'); }
+        }
+
+        async function ejecutarVerificacionOTP(event) {
+            event.preventDefault();
+            const codigo = document.getElementById('otp-codigo').value.trim();
+            try {
+                const res = await fetch(`${API_URL}/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: correoPendienteVerificacion, codigo })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    notificar(data.mensaje);
+                    document.getElementById('box-otp-visual-uni').classList.add('hidden');
+                    cambiarFormularioAuth('login');
+                } else { notificar(data.error, 'error'); }
+            } catch { notificar("Error transaccional en el token.", 'error'); }
+        }
+
+        function inicializarEntornoPlataforma() {
+            document.getElementById('seccion-auth').classList.add('hidden');
+            document.getElementById('seccion-sistema').classList.remove('hidden');
+            toggleAsistenteWidget(false);
+            
+            const logs = document.getElementById('chat-logs');
+            const barraNav = document.getElementById('barra-botones-nav');
+            barraNav.innerHTML = '';
+
+            if(usuarioSesion.rol === 'COMPRADOR') {
+                document.getElementById('ia-titulo-contexto').innerText = "IA Automatización de Órdenes ⚡";
+                logs.innerHTML = `<div class="bg-slate-200 text-slate-800 p-2.5 rounded-xl max-w-[85%] self-start leading-normal font-medium">Hola, soy la IA de SupplierNi. Escribime qué suministros o materiales necesitás para tu negocio y pre-cargaré tu carrito automáticamente.</div>`;
+                barraNav.innerHTML += `<button onclick="cambiarVistaSistema('marketplace')" id="nav-marketplace" class="bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700">Marketplace B2B</button>`;
+                barraNav.innerHTML += `<button onclick="cambiarVistaSistema('ia')" id="nav-ia" class="text-slate-400 hover:text-white px-3 py-1.5 text-xs font-bold transition-colors">KPIs Proyecto</button>`;
+                cambiarVistaSistema('marketplace');
+            } else {
+                document.getElementById('ia-titulo-contexto').innerText = "IA Inteligencia de Plaza 📊";
+                logs.innerHTML = `<div class="bg-slate-200 text-slate-800 p-2.5 rounded-xl max-w-[85%] self-start leading-normal font-medium">Panel Corporativo del Proveedor Mayorista activo. Consultame sobre los artículos más vendidos o las zonas de Nicaragua con mayor demanda comercial.</div>`;
+                barraNav.innerHTML += `<button onclick="cambiarVistaSistema('proveedor')" id="nav-proveedor" class="bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700">Carga Mayorista</button>`;
+                barraNav.innerHTML += `<button onclick="cambiarVistaSistema('ia')" id="nav-ia" class="text-slate-400 hover:text-white px-3 py-1.5 text-xs font-bold transition-colors">KPIs Proyecto</button>`;
+                cambiarVistaSistema('proveedor');
+            }
+            document.getElementById('usr-metadata').innerText = `EMPRESA: ${usuarioSesion.nombre} | ROL: ${usuarioSesion.rol}`;
+        }
+
+        function cambiarVistaSistema(vistaTarget) {
+            ['marketplace', 'proveedor', 'ia'].forEach(v => {
+                const dom = document.getElementById(`vista-${v}`);
+                if(dom) dom.className = v === vistaTarget ? 'block' : 'hidden';
+                const btn = document.getElementById(`nav-${v}`);
+                if(btn) btn.className = v === vistaTarget 
+                    ? 'bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 shadow-inner' 
+                    : 'text-slate-400 hover:text-white px-3 py-1.5 text-xs font-bold transition-colors';
+            });
+            if(vistaTarget === 'marketplace') sincronizarCatalogoMaestro();
+            if(vistaTarget === 'proveedor') sincronizarProductosExclusivosProveedor();
+        }
+
+        async function sincronizarCatalogoMaestro() {
+            try {
+                const res = await fetch(`${API_URL}/productos`);
+                catalogoProductosGlobal = await res.json();
+                const grid = document.getElementById('grid-productos');
+                grid.innerHTML = '';
+
+                catalogoProductosGlobal.forEach(p => {
+                    const itemEnCar = carrito.find(c => c.id_producto === p.id_producto);
+                    const cantEnCar = itemEnCar ? itemEnCar.cantidad : 0;
+                    
+                    const stockDisponibleReal = p.stock_disponible - cantEnCar;
+                    const estaAgotado = stockDisponibleReal <= 0;
+
+                    grid.innerHTML += `
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="h-40 w-full bg-slate-100 overflow-hidden relative">
+                                <img src="${p.imagen_url}" alt="Foto" class="h-full w-full object-cover group-hover:scale-102 transition-transform duration-200">
+                                <span class="absolute top-2 left-2 text-[9px] uppercase font-black tracking-wide text-slate-700 bg-white/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full border">${p.categoria}</span>
+                            </div>
+                            <div class="p-4 flex-grow flex flex-col justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm leading-tight mb-1">${p.nombre_articulo}</h4>
+                                    <p class="text-[10px] text-slate-400 font-medium mb-2">Por: ${p.creado_por || 'Distribuidor Central'}</p>
+                                    <p class="text-emerald-500 font-black text-lg my-1">$${p.precio_mayorista.toFixed(2)} <span class="text-xs text-slate-400 font-normal">USD</span></p>
+                                    <p class="text-xs text-slate-500 mb-3">Disponibles en Almacén: <strong class="text-slate-700">${stockDisponibleReal} / ${p.stock_disponible}</strong> uds</p>
+                                </div>
+                                <div class="space-y-2 pt-2 border-t border-slate-50">
+                                    <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+                                        <span>Solicitar Cantidad:</span>
+                                        <!-- ALGORITMO DE REEMPLAZO DE ENTRADA NUMÉRICA -->
+                                        <input type="number" id="input-qty-${p.id_producto}" min="0" max="${stockDisponibleReal}" value="0" 
+                                               onfocus="if(this.value === '0') this.value = '';"
+                                               onblur="if(this.value === '') this.value = 0;"
+                                               oninput="validarLimitesStockInput(this, ${stockDisponibleReal})" 
+                                               class="w-14 p-1 border rounded-lg font-bold text-center bg-slate-50 text-slate-800 focus:outline-none" ${estaAgotado ? 'disabled' : ''}>
+                                    </div>
+                                    <button onclick="inyectarCarrito(${p.id_producto}, '${p.nombre_articulo}', ${p.precio_mayorista}, ${p.stock_disponible})" 
+                                            id="btn-add-${p.id_producto}"
+                                            class="w-full ${estaAgotado ? 'bg-slate-100 text-slate-400 cursor-not-allowed border' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'} py-2 rounded-xl text-xs font-bold transition-all"
+                                            ${estaAgotado ? 'disabled' : ''}>
+                                        ${estaAgotado ? 'Límite Máximo Alcanzado' : 'Añadir a la Orden'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch {}
+        }
+
+        function validarLimitesStockInput(input, maxStockReal) {
+            let valor = parseInt(input.value);
+            if (valor > maxStockReal) {
+                input.value = maxStockReal;
+                notificar(`El stock máximo disponible para este artículo es de ${maxStockReal} unidades.`, 'error');
+            }
+        }
+
+        function inyectarCarrito(id, nombre, precio, stockMaximoOriginal) {
+            const qtyInput = document.getElementById(`input-qty-${id}`);
+            const cantidadSolicitada = parseInt(qtyInput.value) || 0;
+
+            if (cantidadSolicitada <= 0) {
+                notificar("Debe ingresar una cantidad mayor a 0 para añadir a la orden.", "error");
+                return;
+            }
+
+            const existente = carrito.find(item => item.id_producto === id);
+            const cantEnCarAct = existente ? existente.cantidad : 0;
+            const limiteMaximoPermitido = stockMaximoOriginal - cantEnCarAct;
+
+            if (cantidadSolicitada > limiteMaximoPermitido) {
+                notificar(`Existencias insuficientes. Solo puede añadir un máximo de ${limiteMaximoPermitido} unidades.`, 'error');
+                return;
+            }
+
+            if(existente) {
+                existente.cantidad += cantidadSolicitada;
+            } else {
+                carrito.push({ id_producto: id, nombre_articulo: nombre, precio_mayorista: precio, cantidad: cantidadSolicitada });
+            }
+            notificar(`Se añadieron ${cantidadSolicitada} unidad(es) de ${nombre}`);
+            actualizarCarritoUI();
+        }
+
+        function actualizarCarritoUI() {
+            const container = document.getElementById('box-carrito');
+            if(carrito.length === 0) {
+                container.innerHTML = 'No hay productos seleccionados.';
+                document.getElementById('total-car').innerText = '0.00';
+                sincronizarCatalogoMaestro();
+                return;
+            }
+
+            container.innerHTML = '';
+            let total = 0;
+            carrito.forEach((item, index) => {
+                const subtotal = item.precio_mayorista * item.cantidad;
+                total += subtotal;
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div class="flex-grow pr-1">
+                            <span class="font-bold text-slate-800 text-[11px] block leading-tight">${item.nombre_articulo}</span>
+                            <div class="text-[10px] text-slate-400 font-mono mt-0.5">Cant: ${item.cantidad} x $${item.precio_mayorista.toFixed(2)}</div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <b class="text-slate-900 text-xs font-mono">$${subtotal.toFixed(2)}</b>
+                            <button onclick="eliminarFilaCarrito(${index})" class="text-slate-400 hover:text-red-500 font-bold px-1 text-sm transition-colors">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('total-car').innerText = total.toFixed(2);
+            sincronizarCatalogoMaestro();
+        }
+
+        function eliminarFilaCarrito(index) {
+            const nombre = carrito[index].nombre_articulo;
+            carrito.splice(index, 1);
+            notificar(`Se removió ${nombre} de las líneas de pedido.`, 'error');
+            actualizarCarritoUI();
+        }
+
+        function vaciarCarritoCompleto() {
+            carrito = [];
+            notificar("Se ha vaciado el carrito de compras.", "error");
+            actualizarCarritoUI();
+        }
+
+        function abrirModalDespachoEmail() {
+            if(carrito.length === 0) return notificar("La orden de compra está vacía.", 'error');
+            document.getElementById('email-despacho-input').value = usuarioSesion.correo || '';
+            document.getElementById('modal-email-factura').classList.remove('hidden');
+        }
+
+        function cerrarModalEmail() {
+            document.getElementById('modal-email-factura').classList.add('hidden');
+        }
+
+        async function confirmarPedidoB2B() {
+            const emailTarget = document.getElementById('email-despacho-input').value.trim();
+            if(!emailTarget || !emailTarget.includes('@')) {
+                return notificar("Por favor ingrese un correo válido corporativo.", 'error');
+            }
+
+            const btnConfirmar = document.getElementById('btn-confirmar-envio-email');
+            btnConfirmar.innerText = "TRANSMITIENDO POR SMTP...";
+            btnConfirmar.disabled = true;
+
+            const total = carrito.reduce((acc, i) => acc + (i.precio_mayorista * i.cantidad), 0);
+            const metodoPagoSelected = document.getElementById('checkout-metodo-pago').value;
+
+            try {
+                const res = await fetch(`${API_URL}/pedidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id_comprador: usuarioSesion.nombre, 
+                        items: carrito, 
+                        total_neto: total,
+                        terminos_pago: metodoPagoSelected,
+                        email_despacho: emailTarget
+                    })
+                });
+                const data = await res.json();
+                
+                if(res.ok) {
+                    document.getElementById('modal-email-factura').classList.add('hidden');
+                    notificar(`¡Factura digital enviada con éxito a ${emailTarget}!`, 'exito');
+
+                    document.getElementById('factura-num').innerText = Math.floor(100000 + Math.random() * 900000);
+                    document.getElementById('factura-cliente').innerText = usuarioSesion.nombre;
+                    document.getElementById('factura-metodo').innerText = metodoPagoSelected;
+                    document.getElementById('factura-fecha').innerText = new Date().toLocaleString();
+                    document.getElementById('factura-total').innerText = total.toFixed(2);
+                    document.getElementById('factura-envio-correo').innerText = emailTarget;
+                    
+                    const boxFacturaItems = document.getElementById('factura-items');
+                    boxFacturaItems.innerHTML = '';
+                    carrito.forEach(i => {
+                        boxFacturaItems.innerHTML += `<div class="flex justify-between"><span>• ${i.nombre_articulo} (x${i.cantidad})</span><span>$${(i.precio_mayorista * i.cantidad).toFixed(2)}</span></div>`;
+                    });
+
+                    const boxCuentas = document.getElementById('lista-cuentas-bancarias');
+                    boxCuentas.innerHTML = '';
+                    if(data.coordenadas_bancarias) {
+                        data.coordenadas_bancarias.forEach(cb => {
+                            boxCuentas.innerHTML += `<div class="bg-white/60 p-1.5 rounded border border-amber-200/50 mt-1 uppercase text-[10px]">${cb.banco}: <b class="text-slate-900">${cb.cuenta}</b> (${cb.moneda})</div>`;
+                        });
+                        document.getElementById('bloque-bancos-factura').classList.remove('hidden');
+                    } else {
+                        document.getElementById('bloque-bancos-factura').classList.add('hidden');
+                    }
+
+                    document.getElementById('modal-factura').classList.remove('hidden');
+                } else { notificar(data.error, 'error'); }
+            } catch { notificar("Error en el microservicio transaccional cloud.", 'error'); }
+            finally {
+                btnConfirmar.innerText = "Enviar y Procesar";
+                btnConfirmar.disabled = false;
+            }
+        }
+
+        function cerrarModalFactura() {
+            document.getElementById('modal-factura').classList.add('hidden');
+            carrito = [];
+            actualizarCarritoUI();
+        }
+
+        async function registrarProductoCatalogo(e) {
+            e.preventDefault();
+            const categoria = document.getElementById('prod-cat').value;
+            const nombre_articulo = document.getElementById('prod-nombre').value.trim();
+            const precio_mayorista = document.getElementById('prod-precio').value;
+            const stock_disponible = document.getElementById('prod-stock').value;
+            const imagen_url = document.getElementById('prod-img').value.trim();
+
+            try {
+                const res = await fetch(`${API_URL}/productos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        nombre_articulo, precio_mayorista, stock_disponible, categoria, imagen_url,
+                        creado_por: usuarioSesion.nombre 
+                    })
+                });
+                if(res.ok) {
+                    notificar(`¡${nombre_articulo} indexado con éxito en bodega!`);
+                    document.getElementById('prod-nombre').value = '';
+                    document.getElementById('prod-precio').value = '';
+                    document.getElementById('prod-stock').value = '';
+                    document.getElementById('prod-img').value = '';
+                    sincronizarProductosExclusivosProveedor();
+                }
+            } catch { notificar("Error al inyectar producto.", 'error'); }
+        }
+
+        async function sincronizarProductosExclusivosProveedor() {
+            try {
+                const res = await fetch(`${API_URL}/productos`);
+                const productos = await res.json();
+                const tabla = document.getElementById('tabla-productos-proveedor');
+                tabla.innerHTML = '';
+
+                const misProductos = productos.filter(p => p.creado_por === usuarioSesion.nombre);
+                
+                if(misProductos.length === 0) {
+                    tabla.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">No ha indexado productos propios todavía. Use el panel lateral.</td></tr>`;
+                    return;
+                }
+
+                misProductos.forEach(p => {
+                    tabla.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b">
+                            <td class="p-3 font-mono text-slate-400 text-[10px]">#00${p.id_producto}</td>
+                            <td class="p-3 font-bold text-slate-800">${p.nombre_articulo}</td>
+                            <td class="p-3 font-semibold text-slate-500">${p.categoria}</td>
+                            <td class="p-3 text-center font-bold text-emerald-600">$${p.precio_mayorista.toFixed(2)}</td>
+                            <td class="p-3 text-center bg-slate-50 font-black text-slate-700">${p.stock_disponible}</td>
+                        </tr>
+                    `;
+                });
+            } catch {}
+        }
+
+        async function enviarMensajeIA() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const logs = document.getElementById('chat-logs');
+            logs.innerHTML += `<div class="bg-emerald-500 text-white p-2.5 rounded-2xl max-w-[85%] self-end leading-relaxed shadow-sm font-medium">${txt}</div>`;
+            input.value = '';
+            logs.scrollTop = logs.scrollHeight;
+
+            try {
+                const res = await fetch(`${API_URL}/ia-asistente`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mensaje: txt, rol: usuarioSesion.rol })
+                });
+                const data = await res.json();
+                
+                logs.innerHTML += `<div class="bg-white p-2.5 rounded-2xl max-w-[85%] self-start border shadow-sm text-slate-800 font-medium leading-relaxed">${data.respuesta}</div>`;
+                
+                if(data.items && data.items.length > 0) {
+                    data.items.forEach(iaItem => {
+                        const original = catalogoProductosGlobal.find(p => p.id_producto === iaItem.id_producto);
+                        if(original) {
+                            const yaEnCar = carrito.find(c => c.id_producto === iaItem.id_producto);
+                            const actEnCar = yaEnCar ? yaEnCar.cantidad : 0;
+                            const remBodega = original.stock_disponible - actEnCar;
+
+                            if (remBodega > 0) {
+                                const cantFinal = iaItem.cantidad > remBodega ? remBodega : iaItem.cantidad;
+                                if(!yaEnCar) {
+                                    carrito.push({ id_producto: original.id_producto, nombre_articulo: original.nombre_articulo, precio_mayorista: original.precio_mayorista, cantidad: cantFinal });
+                                } else { yaEnCar.cantidad += cantFinal; }
+                                notificar(`IA indexó automáticamente ${cantFinal} unidad(es) de ${original.nombre_articulo}`);
+                            }
+                        }
+                    });
+                    actualizarCarritoUI();
+                }
+
+                const sugBox = document.getElementById('box-sugerencias-ia');
+                if(data.sugerencias && data.sugerencias.length > 0) {
+                    sugBox.innerHTML = `🌟 **Sugerencia IA:** Suministros complementarios de mercado detectados: ` + data.sugerencias.map(s => `<span class="underline">${s.nombre_articulo}</span>`).join(' y ');
+                    sugBox.classList.remove('hidden');
+                } else {
+                    sugBox.classList.add('hidden');
+                }
+
+                logs.scrollTop = logs.scrollHeight;
+            } catch {
+                logs.innerHTML += `<div class="bg-red-50 text-red-700 p-2 rounded-xl max-w-[85%] self-start font-bold">Error en canal de IA cloud.</div>`;
+            }
+        }
+
+        function cerrarSesion() {
+            usuarioSesion = null;
+            carrito = [];
+            document.getElementById('seccion-sistema').classList.add('hidden');
+            document.getElementById('asistente-chat-ui').classList.add('hidden');
+            document.getElementById('btn-chat-ia-abrir').classList.add('hidden');
+            document.getElementById('seccion-auth').classList.remove('hidden');
+            cambiarFormularioAuth('login');
+            notificar("Sesión cerrada correctamente.", 'error');
+        }
+    </script>
+</body>
+</html>
