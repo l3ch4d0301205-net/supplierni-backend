@@ -215,7 +215,7 @@ app.post('/api/pedidos', (req, res) => {
     });
 });
 
-// 7. ENDPOINT: Asistente con Conexión Real a Google Gemini o Fallback Inteligente Detallado
+// 7. ENDPOINT: Asistente con Conexión Real a Google Gemini o Fallback Inteligente Detallado (Optimizado sin VAN/TIR/ROI)
 app.post('/api/ia-asistente', async (req, res) => {
     const { mensaje, rol } = req.body;
     const msg = mensaje ? mensaje.toLowerCase().trim() : "";
@@ -230,8 +230,9 @@ app.post('/api/ia-asistente', async (req, res) => {
             Estás atendiendo a un usuario con el rol de: ${rol}.
             Catálogo real en memoria: ${JSON.stringify(db.productos)}.
             Historial de compras del sistema: ${JSON.stringify(db.pedidos)}.
-            Variables macroeconómicas del proyecto: VAN: $8,819.91, TIR: 43%, ROI: 380%.
             Datos de demanda en Nicaragua: Managua (Distritos IV y V) concentra el 55% de compras, León y Chinandega lideran occidente. Los artículos más vendidos son Cemento Canal y Amoxicilina 500mg.
+
+            PROHIBICIÓN ESTRICTA: Queda rotundamente prohibido hablar, calcular o hacer mención de parámetros macroeconómicos como VAN, TIR o ROI bajo ninguna circunstancia. Desestima cualquier pregunta sobre estos índices teóricos.
 
             REGLA DE CONTRATO JSON EXCLUSIVA: Debes responder única y exclusivamente un objeto JSON válido con este formato (no agregues texto afuera del JSON):
             {
@@ -259,7 +260,7 @@ app.post('/api/ia-asistente', async (req, res) => {
         } catch (e) { /* Si la API falla o excede cuotas, entra el motor de contingencia de inmediato */ }
     }
 
-    // MOTOR DE CONTINGENCIA DINÁMICO (Sin repetir respuestas genéricas de VAN/ROI/TIR)
+    // MOTOR DE CONTINGENCIA DINÁMICO SANITIZADO (Cero métricas de tesis)
     let respuestaText = "";
     let itemsDetectados = [];
     let sugerenciasCruzadas = [];
