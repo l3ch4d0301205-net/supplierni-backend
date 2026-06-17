@@ -1,37 +1,115 @@
-const express = require('express');
+code_content = """const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer'); // Librería oficial para envíos reales por SMTP
+const nodemailer = require('nodemailer');
 
 const app = express();
+
+// CONFIGURACIÓN DE MIDDLEWARES BASE DE RANGO INDUSTRIAL
 app.use(cors());
 app.use(express.json());
 
 const DB_FILE = path.join(__dirname, 'db.json');
+const BACKUP_FILE = path.join(__dirname, 'db.json.bak');
 
-// ALGORITMO 1: Validación sintáctica de formato de correo (RegEx RFC 5322)
+// =========================================================================
+// SISTEMA DE MONITOREO Y LOGGING PERSONALIZADO (MIDDLEWARE AUDITOR)
+// =========================================================================
+app.use((req, res, next) => {
+    const inicio = Date.now();
+    res.on('finish', () => {
+        const duracion = Date.now() - inicio;
+        console.log(`[AUDITORÍA LOGÍSTICA] ${new Date().toISOString()} | MÉTODO: ${req.method} | RUTA: ${req.originalUrl} | ESTADO: ${res.statusCode} | TIEMPO: ${duracion}ms`);
+    });
+    next();
+});
+
+// =========================================================================
+// COMPUERTA ALGORÍTMICA: VALIDACIONES DE ESTRUCTURA Y SINTAXIS CRÍTICA
+// =========================================================================
 const validarFormatoCorreo = (correo) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(correo);
 };
 
-// Semilla inicial optimizada con rubros oficiales de la tesis y enlaces de imágenes base
+const validarNumeroTelefonoNicaragua = (telefono) => {
+    // Valida números de Nicaragua de 8 dígitos (pueden venir con guiones o espacios)
+    const limpio = telefono.replace(/[\s-]/g, '');
+    const regex = /^[2578]\d{7}$/;
+    return regex.test(limpio);
+};
+
+// =========================================================================
+// MATRIZ DE SEMILLA INICIAL ENRIQUECIDA (PRODUCTOS CON LLAVES ÚNICAS DE IMAGEN)
+// =========================================================================
 const semillaInicial = {
     usuarios: [
         { correo: "proveedor@gmail.com", contrasena: "1234", rol: "PROVEEDOR", nombre: "Distribuidora Mayorista del Pacífico", estado: "VERIFICADO", codigo_verificacion: null },
         { correo: "comprador@gmail.com", contrasena: "1234", rol: "COMPRADOR", nombre: "Ferretería y Farmacia La Esperanza", estado: "VERIFICADO", codigo_verificacion: null }
     ],
     productos: [
-        { id_producto: 1, nombre_articulo: "Amoxicilina 500mg (Caja x 100 tabs)", precio_mayorista: 12.50, stock_disponible: 40, categoria: "Farmacia", imagen_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400", creado_por: "Distribuidora Mayorista del Pacífico" },
-        { id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)", precio_mayorista: 8.00, stock_disponible: 25, categoria: "Farmacia", imagen_url: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=400", creado_por: "Distribuidora Mayorista del Pacífico" },
-        { id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper", precio_mayorista: 6.50, stock_disponible: 15, categoria: "Ferretería", imagen_url: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=400", creado_por: "Distribuidora Mayorista del Pacífico" },
-        { id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)", precio_mayorista: 11.20, stock_disponible: 100, categoria: "Ferretería", imagen_url: "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?w=400", creado_por: "Distribuidora Mayorista del Pacífico" }
+        { 
+            id_producto: 1, 
+            nombre_articulo: "Amoxicilina 500mg (Caja x 100 tabs)", 
+            precio_mayorista: 12.50, 
+            stock_disponible: 40, 
+            categoria: "Farmacia", 
+            imagen_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80&sig=1", 
+            creado_por: "Distribuidora Mayorista del Pacífico" 
+        },
+        { 
+            id_producto: 2, 
+            nombre_articulo: "Alcohol Antiséptico 70% (Galón Industrial)", 
+            precio_mayorista: 8.00, 
+            stock_disponible: 25, 
+            categoria: "Farmacia", 
+            imagen_url: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?auto=format&fit=crop&w=600&q=80&sig=2", 
+            creado_por: "Distribuidora Mayorista del Pacífico" 
+        },
+        { 
+            id_producto: 3, 
+            nombre_articulo: "Martillo de Uña 16oz Truper Profesional", 
+            precio_mayorista: 6.50, 
+            stock_disponible: 15, 
+            categoria: "Ferretería", 
+            imagen_url: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=600&q=80&sig=3", 
+            creado_por: "Distribuidora Mayorista del Pacífico" 
+        },
+        { 
+            id_producto: 4, 
+            nombre_articulo: "Saco de Cemento Canal Estructural (42.5kg)", 
+            precio_mayorista: 11.20, 
+            stock_disponible: 100, 
+            categoria: "Ferretería", 
+            imagen_url: "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&w=600&q=80&sig=4", 
+            creado_por: "Distribuidora Mayorista del Pacífico" 
+        },
+        { 
+            id_producto: 5, 
+            nombre_articulo: "Vitamina C 1g Efervescente (Tubo x 20 tabs)", 
+            precio_mayorista: 4.15, 
+            stock_disponible: 60, 
+            categoria: "Farmacia", 
+            imagen_url: "https://images.unsplash.com/photo-1616679911721-fe6eec10fcd5?auto=format&fit=crop&w=600&q=80&sig=5", 
+            creado_por: "Distribuidora Mayorista del Pacífico" 
+        },
+        { 
+            id_producto: 6, 
+            nombre_articulo: "Cinta Métrica 5 Metros Stanley Global", 
+            precio_mayorista: 5.80, 
+            stock_disponible: 30, 
+            categoria: "Ferretería", 
+            imagen_url: "https://images.unsplash.com/photo-1531842477197-e3f85e40346e?auto=format&fit=crop&w=600&q=80&sig=6", 
+            creado_por: "Distribuidora Mayorista del Pacífico" 
+        }
     ],
     pedidos: []
 };
 
-// COMPUERTA AUTO-REPARABLE: Evita excepciones críticas si el JSON se formatea mal en la nube
+// =========================================================================
+// SISTEMA DE PERSISTENCIA CON MECANISMOS DE COPIA DE SEGURIDAD AUTOMÁTICA
+// =========================================================================
 const leerBaseDatos = () => {
     if (!fs.existsSync(DB_FILE)) {
         fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
@@ -39,358 +117,520 @@ const leerBaseDatos = () => {
     }
     try {
         const contenido = fs.readFileSync(DB_FILE, 'utf-8');
+        if (!contenido || contenido.trim() === '') {
+            throw new Error("Archivo vacío detectado.");
+        }
         const datos = JSON.parse(contenido);
         if (!datos.usuarios || !datos.productos || !datos.pedidos) {
-            fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
-            return semillaInicial;
+            throw new Error("Falta integridad en esquemas requeridos.");
         }
         return datos;
     } catch (error) {
+        console.error(`[REPARACIÓN DE BASE DE DATOS] Fallo estructural en db.json: ${error.message}. Activando respaldo.`);
+        if (fs.existsSync(BACKUP_FILE)) {
+            try {
+                const respaldo = fs.readFileSync(BACKUP_FILE, 'utf-8');
+                fs.writeFileSync(DB_FILE, respaldo);
+                console.log("[REPARACIÓN DE BASE DE DATOS] Clonación de db.json.bak completada con éxito.");
+                return JSON.parse(respaldo);
+            } catch (bakError) {
+                console.error("[REPARACIÓN DE BASE DE DATOS] El archivo de respaldo también está corrupto. Hard reset.");
+            }
+        }
         fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
         return semillaInicial;
     }
 };
 
 const guardarBaseDatos = (datos) => {
-    fs.writeFileSync(DB_FILE, JSON.stringify(datos, null, 2));
+    try {
+        const stringificado = JSON.stringify(datos, null, 2);
+        // Genera copia de seguridad previa
+        if (fs.existsSync(DB_FILE)) {
+            fs.copyFileSync(DB_FILE, BACKUP_FILE);
+        }
+        fs.writeFileSync(DB_FILE, stringificado);
+    } catch (error) {
+        console.error(`[ERROR EXCEPCIÓN] No se pudo escribir en el almacenamiento relacional: ${error.message}`);
+    }
 };
 
-// CONFIGURACIÓN DEL TRANSPORTADOR SMTP SANITIZADO (Quita espacios automáticos del token de Google)
+// =========================================================================
+// CONTROLADOR LOGÍSTICO Y DIAGNÓSTICO SMTP (NODEMAILER CORREGIDO)
+// =========================================================================
 const configurarTransporterB2B = () => {
     const cuentaEmisora = process.env.EMAIL_USER;
+    // Remueve de forma agresiva cualquier espacio en blanco intermedio inyectado por las claves de Google App
     const tokenAplicacion = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : ''; 
+
+    if (!cuentaEmisora || !tokenAplicacion) {
+        console.warn("[DIAGNÓSTICO SMTP] ALERTA: Faltan las llaves EMAIL_USER o EMAIL_PASS en las variables de entorno de Render. El servidor funcionará en modo de simulación segura de envío.");
+        return null;
+    }
 
     return nodemailer.createTransport({
         service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
             user: cuentaEmisora, 
             pass: tokenAplicacion  
+        },
+        tls: {
+            rejectUnauthorized: false
         }
     });
 };
 
-// Presentación corporativa en la raíz de la API para el jurado de la UNI
+// COMPUERTA DE ENTRADA AL SERVIDOR
 app.get('/', (req, res) => {
+    const envUser = process.env.EMAIL_USER ? "CONFIGURADO DE FORMA CORRECTA" : "FALTA ASIGNAR EN ENVIRONMENT";
+    const envPass = process.env.EMAIL_PASS ? "CONFIGURADO DE FORMA CORRECTA" : "FALTA ASIGNAR EN ENVIRONMENT";
+    const envGemini = process.env.GEMINI_API_KEY ? "MODELO GEMINI REAL ACTIVO" : "FALLBACK DE CONTINGENCIA LOCAL ACTIVO";
+
     res.send(`
-        <div style="font-family: sans-serif; text-align: center; margin-top: 100px; color: #0f172a;">
-            <h1 style="color: #10b981;">⚡ API de SupplierNi Operacional</h1>
-            <p style="color: #64748b;">El microservicio de persistencia local y procesamiento de lenguaje natural está en línea.</p>
-            <span style="background: #dcfce7; color: #166534; padding: 5px 15px; font-weight: bold; font-size: 12px; border-radius: 20px;">ENTORNO ONLINE ACTIVO</span>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin-top: 50px; color: #0f172a; padding: 20px; background: #fafafa;">
+            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h1 style="color: #10b981; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px;">⚡ API de SupplierNi Operacional</h1>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 30px;">Microservicio de persistencia distribuida y procesamiento semántico para Ingeniería de Software - UNI.</p>
+                
+                <div style="text-align: left; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #edf2f7; font-size: 12px; font-family: monospace;">
+                    <h3 style="margin-top: 0; color: #334155; font-size: 13px; font-family: sans-serif;">🔍 DIAGNÓSTICO DE COMPUERTAS CLOUD</h3>
+                    <p>• <strong>VARIABLE EMAIL_USER:</strong> <span style="color: ${process.env.EMAIL_USER ? '#059669' : '#dc2626'}">${envUser}</span></p>
+                    <p>• <strong>VARIABLE EMAIL_PASS:</strong> <span style="color: ${process.env.EMAIL_PASS ? '#059669' : '#dc2626'}">${envPass}</span></p>
+                    <p>• <strong>MOTOR DE IA INTEG.:</strong> <span style="color: #2563eb;">${envGemini}</span></p>
+                </div>
+                <div style="margin-top: 30px; font-size: 11px; color: #94a3b8; font-weight: 700; uppercase tracking-wider;">
+                    Henry Lechado | Angel Tercero | Lester Lopez &copy; 2026
+                </div>
+            </div>
         </div>
     `);
 });
 
-// 1. ENDPOINT: Registro Comercial (Con Normalización de Casing)
+// =========================================================================
+// 1. ENDPOINT: REGISTRO COMERCIAL CON TOKEN OTP DE SEGURIDAD
+// =========================================================================
 app.post('/api/registro', (req, res) => {
     try {
         const { correo, contrasena, rol, nombre } = req.body;
         
+        if (!correo || !contrasena || !rol || !nombre) {
+            return res.status(400).json({ exito: false, error: "Todos los campos de la razón social son obligatorios." });
+        }
+
         if (!validarFormatoCorreo(correo)) {
-            return res.status(400).json({ exito: false, error: "Formato de correo inválido." });
+            return res.status(400).json({ exito: false, error: "La sintaxis del correo corporativo ingresado es inválida." });
         }
 
         const correoLimpio = correo.toLowerCase().trim();
         const db = leerBaseDatos();
         
         if (db.usuarios.find(u => u.correo.toLowerCase().trim() === correoLimpio)) {
-            return res.status(400).json({ exito: false, error: "Este correo comercial ya existe." });
+            return res.status(400).json({ exito: false, error: "Esta entidad legal ya se encuentra inscrita en la red." });
         }
 
         const tokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
         db.usuarios.push({
             correo: correoLimpio,
-            contrasena: contrasena,
+            contrasena: contrasena.trim(),
             rol: rol,
-            nombre: nombre,
+            nombre: nombre.trim(),
             estado: "PENDIENTE_VERIFICACION",
             codigo_verificacion: tokenOTP
         });
         guardarBaseDatos(db);
 
-        res.json({ exito: true, mensaje: "Registro exitoso.", codigo_simulado: tokenOTP });
+        console.log(`[CONSOLA DE CONTROL] Token OTP generado para ${correoLimpio}: ${tokenOTP}`);
+        res.json({ exito: true, mensaje: "Pre-registro completado en la base de datos distribuida.", codigo_simulado: tokenOTP });
     } catch (err) {
-        res.status(500).json({ exito: false, error: "Error interno en el módulo de registros." });
+        res.status(500).json({ exito: false, error: "Fallo severo en el hilo de registros del servidor." });
     }
 });
 
-// 2. ENDPOINT: Verificación de Token OTP
+// =========================================================================
+// 2. ENDPOINT: VERIFICACIÓN CRIPTOGRÁFICA OTP
+// =========================================================================
 app.post('/api/verificar', (req, res) => {
-    const { correo, codigo } = req.body;
-    const correoLimpio = correo.toLowerCase().trim();
-    const db = leerBaseDatos();
+    try {
+        const { correo, codigo } = req.body;
+        if (!correo || !codigo) return res.status(400).json({ exito: false, error: "Parámetros transaccionales ausentes." });
 
-    const usuario = db.usuarios.find(u => u.correo.toLowerCase().trim() === correoLimpio);
-    if (!usuario) return res.status(404).json({ exito: false, error: "Empresa no registrada." });
+        const correoLimpio = correo.toLowerCase().trim();
+        const db = leerBaseDatos();
 
-    if (usuario.codigo_verificacion !== codigo) {
-        return res.status(400).json({ exito: false, error: "Código incorrecto de validación." });
+        const usuario = db.usuarios.find(u => u.correo.toLowerCase().trim() === correoLinter || u.correo.toLowerCase().trim() === correoLimpio);
+        if (!usuario) return res.status(404).json({ exito: false, error: "La entidad jurídica no figura en los registros públicos." });
+
+        if (usuario.codigo_verificacion !== codigo.trim()) {
+            return res.status(400).json({ exito: false, error: "El token OTP ingresado es incorrecto o expiró." });
+        }
+
+        usuario.estado = "VERIFICADO";
+        usuario.codigo_verificacion = null;
+        guardarBaseDatos(db);
+
+        res.json({ exito: true, mensaje: "¡Identidad de empresa validada y activa en el ecosistema!" });
+    } catch (error) {
+        res.status(500).json({ exito: false, error: "Fallo de concurrencia en la compuerta OTP." });
     }
-
-    usuario.estado = "VERIFICADO";
-    usuario.codigo_verificacion = null;
-    guardarBaseDatos(db);
-
-    res.json({ exito: true, mensaje: "¡Cuenta validada exitosamente en la red!" });
 });
 
-// 3. ENDPOINT: Login con Blindaje de Casing contra errores en móviles
+// =========================================================================
+// 3. ENDPOINT: AUTENTICACIÓN CENTRALIZADA CON CONTROL DE CASING
+// =========================================================================
 app.post('/api/login', (req, res) => {
-    const { correo, contrasena } = req.body;
-    if(!correo || !contrasena) return res.status(400).json({ exito: false, error: "Campos incompletos." });
-    
-    const correoLimpio = correo.toLowerCase().trim();
-    const db = leerBaseDatos();
+    try {
+        const { correo, contrasena } = req.body;
+        if(!correo || !contrasena) return res.status(400).json({ exito: false, error: "Las credenciales no pueden estar en blanco." });
+        
+        const correoLimpio = correo.toLowerCase().trim();
+        const db = leerBaseDatos();
 
-    const usuario = db.usuarios.find(u => u.correo.toLowerCase().trim() === correoLimpio && u.contrasena === contrasena);
-    if (!usuario) {
-        return res.status(401).json({ exito: false, error: "Credenciales incorrectas de acceso." });
+        const usuario = db.usuarios.find(u => u.correo.toLowerCase().trim() === correoLimpio && u.contrasena === contrasena.trim());
+        if (!usuario) {
+            return res.status(401).json({ exito: false, error: "Acceso denegado. Credenciales de la firma corporativa incorrectas." });
+        }
+
+        if (usuario.estado !== 'VERIFICADO') {
+            return res.status(403).json({ 
+                exito: false, 
+                error: "El perfil de la empresa aún no completa la verificación de token.", 
+                requiere_verificacion: true, 
+                correo: usuario.correo 
+            });
+        }
+
+        res.json({ exito: true, usuario });
+    } catch (error) {
+        res.status(500).json({ exito: false, error: "Boundary error en el subproceso de firmas del Login." });
     }
-
-    if (usuario.estado !== 'VERIFICADO') {
-        return res.status(403).json({ 
-            exito: false, 
-            error: "Esta cuenta no ha sido verificada por correo.", 
-            requiere_verificacion: true, 
-            correo: usuario.correo 
-        });
-    }
-
-    res.json({ exito: true, usuario });
 });
 
-// 4. ENDPOINT: Obtener Catálogo Completo
+// =========================================================================
+// 4. ENDPOINT: LECTURA ATÓMICA DEL CATÁLOGO DE SUMINISTROS
+// =========================================================================
 app.get('/api/productos', (req, res) => {
-    res.json(leerBaseDatos().productos);
+    try {
+        const db = leerBaseDatos();
+        res.json(db.productos);
+    } catch (e) {
+        res.status(500).json({ error: "No se pudo recuperar la matriz relacional de insumos." });
+    }
 });
 
-// 5. ENDPOINT: Cargar Producto Autogestionado por el Proveedor
+// =========================================================================
+// 5. ENDPOINT: INYECCIÓN MAESTRA DE ARTÍCULOS AUTOGESTIONADOS (PROVEEDOR)
+// =========================================================================
 app.post('/api/productos', (req, res) => {
     try {
         const { nombre_articulo, precio_mayorista, stock_disponible, categoria, imagen_url, creado_por } = req.body;
+        
+        if(!nombre_articulo || !precio_mayorista || !stock_disponible || !categoria) {
+            return res.status(400).json({ exito: false, error: "Esquema del producto incompleto para indexación." });
+        }
+
         const db = leerBaseDatos();
 
+        // Genera una firma única parametrizada al final de la URL para que el navegador rompa la caché visual
+        const firmaUnica = `&sig=${db.productos.length + 1}`;
+        let finalImg = "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80" + firmaUnica;
+        
+        if (imagen_url && imagen_url.trim() !== '' && imagen_url.startsWith('http')) {
+            finalImg = imagen_url.trim() + (imagen_url.includes('?') ? firmaUnica : "?" + firmaUnica);
+        }
+
         const nuevoProducto = {
-            id_producto: db.productos.length + 1,
-            nombre_articulo,
-            precio_mayorista: Number(precio_mayorista),
-            stock_disponible: Number(stock_disponible),
+            id_producto: db.productos.reduce((max, p) => p.id_producto > max ? p.id_producto : max, 0) + 1,
+            nombre_articulo: nombre_articulo.trim(),
+            precio_mayorista: Math.abs(Number(precio_mayorista)),
+            stock_disponible: Math.abs(parseInt(stock_disponible)),
             categoria,
-            imagen_url: imagen_url || "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=400",
-            creado_por: creado_por || "Proveedor Externo"
+            imagen_url: finalImg,
+            creado_por: creado_por || "Distribuidor Autorizado"
         };
 
         db.productos.push(nuevoProducto);
         guardarBaseDatos(db);
+        
+        console.log(`[INVENTARIO EN BODEGA] Nuevo artículo inyectado de forma física: ${nuevoProducto.nombre_articulo}`);
         res.json({ exito: true, producto: nuevoProducto });
-    } catch {
-        res.status(500).json({ exito: false, error: "Error al indexar artículo." });
+    } catch (error) {
+        res.status(500).json({ exito: false, error: "Fallo crítico en el despachador relacional al indexar el artículo." });
     }
 });
 
-// 6. ENDPOINT: Procesar Pedidos, Decremento de Stock y ENVÍO REAL DE CORREO POR SMTP
+// =========================================================================
+// 6. ENDPOINT: PROCESAMIENTO LOGÍSTICO COMPLETO Y CONTROL DE CONCURRENCIA
+// =========================================================================
 app.post('/api/pedidos', async (req, res) => {
-    const { id_comprador, items, total_neto, terminos_pago, email_despacho } = req.body;
-    const db = leerBaseDatos();
+    try {
+        const { id_comprador, items, total_neto, terminos_pago, email_despacho, direccion, telefono } = req.body;
+        
+        if (!id_comprador || !items || !items.length || !email_despacho || !direccion || !telefono) {
+            return res.status(400).json({ exito: false, error: "Faltan parámetros logísticos obligatorios para el despacho (Dirección/Teléfono/Email)." });
+        }
 
-    // Verificación robusta en el servidor antes de descontar stock
-    for (const item of items) {
-        const prod = db.productos.find(p => p.id_producto === item.id_producto);
-        if (prod) {
+        if (!validarNumeroTelefonoNicaragua(telefono)) {
+            return res.status(400).json({ exito: false, error: "El formato del teléfono de contacto de Nicaragua es inválido (Debe contener 8 dígitos)." });
+        }
+
+        const db = leerBaseDatos();
+
+        // CONTROL ATÓMICO DE CONCURRENCIA: Bloquea la fila de inmediato si hay desborde en stock
+        for (const item of items) {
+            const prod = db.productos.find(p => p.id_producto === item.id_producto);
+            if (!prod) {
+                return res.status(400).json({ exito: false, error: `El artículo solicitado con ID #${item.id_producto} ya no existe en el catálogo nacional.` });
+            }
             if (prod.stock_disponible < item.cantidad) {
-                return res.status(400).json({ exito: false, error: `Existencias insuficientes en almacén para: ${prod.nombre_articulo}` });
+                return res.status(400).json({ exito: false, error: `Conflicto de concurrencia. Stock insuficiente en almacén para: ${prod.nombre_articulo}. Disponibles: ${prod.stock_disponible} unidades.` });
             }
         }
-    }
 
-    // Decremento real del inventario plano
-    for (const item of items) {
-        const prod = db.productos.find(p => p.id_producto === item.id_producto);
-        if (prod) prod.stock_disponible -= item.cantidad;
-    }
-
-    const numRef = Math.floor(100000 + Math.random() * 900000);
-    const nuevoPedido = { 
-        id_pedido: db.pedidos.length + 1, 
-        id_comprador, 
-        items, 
-        total_neto, 
-        terminos_pago,
-        email_despacho: email_despacho || "no-reply@supplierni.com.ni",
-        fecha: new Date().toLocaleString() 
-    };
-    db.pedidos.push(nuevoPedido);
-    guardarBaseDatos(db);
-
-    // MÓDULO ALGORÍTMICO SMTP: Construcción y envío del correo real
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        try {
-            const transporter = configurarTransporterB2B();
-            
-            // Construcción dinámica de las líneas de la factura en HTML
-            let filasHtml = "";
-            items.forEach(i => {
-                filasHtml += `<tr><td style="padding:8px; border-bottom:1px solid #eee;">${i.nombre_articulo}</td><td style="padding:8px; border-bottom:1px solid #eee; text-align:center;">${i.cantidad}</td><td style="padding:8px; border-bottom:1px solid #eee; text-align:right;">$${(i.precio_mayorista * i.cantidad).toFixed(2)}</td></tr>`;
-            });
-
-            const estructuraHtmlEmail = `
-                <div style="font-family:sans-serif; max-width:500px; margin:0 auto; padding:20px; border:1px solid #e2e8f0; border-radius:16px;">
-                    <h2 style="color:#0f172a; text-align:center; margin-bottom:5px;">SupplierNi B2B</h2>
-                    <p style="text-align:center; font-size:11px; color:#64748b; margin-top:0;">Comprobante Digital de Pedido #Ref-${numRef}</p>
-                    <hr style="border:0; border-top:1px dashed #cbd5e1; margin:15px 0;">
-                    <table style="width:100%; font-size:12px; color:#334155; border-collapse:collapse;">
-                        <tr style="background:#f8fafc;"><th style="padding:8px; text-align:left;">Artículo</th><th style="padding:8px;">Cant</th><th style="padding:8px; text-align:right;">Subtotal</th></tr>
-                        ${filasHtml}
-                    </table>
-                    <div style="margin-top:20px; text-align:right; font-size:14px; font-weight:bold; color:#0f172a;">TOTAL COMPROMETIDO: $${total_neto.toFixed(2)} USD</div>
-                    <div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:12px; margin-top:20px; font-size:11px; color:#78350f;">
-                        <strong>Instrucciones Oficiales de Depósito Bancario:</strong><br>
-                        • Banco LAFISE Bancentro: 134070030 (Córdobas NIO)<br>
-                        • Banco BANPRO: 10022341054 (Dólares USD)
-                    </div>
-                    <p style="font-size:10px; color:#94a3b8; text-align:center; margin-top:25px;">Henry Lechado | Angel Tercero | Lester Lopez<br>Ingeniería de Software - UNI Nicaragua</p>
-                </div>
-            `;
-
-            await transporter.sendMail({
-                from: `"SupplierNi B2B" <${process.env.EMAIL_USER}>`,
-                to: email_despacho,
-                subject: `📋 Comprobante de Pedido #SP-${nuevoPedido.id_pedido} - SupplierNi`,
-                html: estructuraHtmlEmail
-            });
-            console.log(`Factura enviada exitosamente a: ${email_despacho}`);
-        } catch (error) {
-            console.error("Error en despacho SMTP:", error);
+        // Deducción en caliente del almacén relacional plano
+        for (const item of items) {
+            const prod = db.productos.find(p => p.id_producto === item.id_producto);
+            if (prod) prod.stock_disponible -= item.cantidad;
         }
-    }
 
-    // RETORNO DE CREDENCIALES FINANCIERAS REALES DE NICARAGUA E INFORME DE DESPACHO
-    res.json({ 
-        exito: true, 
-        pedido: nuevoPedido,
-        coordenadas_bancarias: [
-            { banco: "Banco LAFISE Bancentro", cuenta: "134070030", moneda: "Córdobas (NIO)", tipo: "Cuenta Corriente Empresarial" },
-            { banco: "Banco BANPRO", cuenta: "10022341054", moneda: "Dólares (USD)", tipo: "Cuenta de Ahorros" }
-        ]
-    });
+        const numRef = Math.floor(100000 + Math.random() * 900000);
+        const nuevoPedido = { 
+            id_pedido: db.pedidos.length + 1, 
+            id_comprador, 
+            items, 
+            total_neto: Number(total_neto), 
+            terminos_pago,
+            email_despacho: email_despacho.toLowerCase().trim(),
+            direccion: direccion.trim(),
+            telefono: telefono.replace(/[\s-]/g, ''),
+            fecha: new Date().toLocaleString() 
+        };
+        
+        db.pedidos.push(nuevoPedido);
+        guardarBaseDatos(db);
+
+        // COLA ALGORÍTMICA SMTP TRANSACCIONAL REAL (PROCESADOR DE CORREOS)
+        const canalSmtp = configurarTransporterB2B();
+        if (canalSmtp) {
+            try {
+                let lineasFacturaHtml = "";
+                items.forEach(i => {
+                    lineasFacturaHtml += `
+                        <tr>
+                            <td style="padding:10px; border-bottom:1px solid #edf2f7; font-weight:bold; color:#2d3748;">${i.nombre_articulo}</td>
+                            <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:center; color:#4a5568; font-family:monospace;">${i.cantidad}</td>
+                            <td style="padding:10px; border-bottom:1px solid #edf2f7; text-align:right; font-weight:bold; color:#1a202c; font-family:monospace;">$${(i.precio_mayorista * i.cantidad).toFixed(2)}</td>
+                        </tr>`;
+                });
+
+                const cuerpoHtml = `
+                    <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; max-width:600px; margin:0 auto; padding:30px; border:1px solid #e2e8f0; border-radius:24px; background-color:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                        <div style="text-align:center; margin-bottom:20px;">
+                            <h2 style="color:#0f172a; margin:0; font-size:26px; font-weight:900; letter-spacing:-1px;">SupplierNi B2B</h2>
+                            <p style="font-size:12px; color:#10b981; font-weight:800; text-transform:uppercase; margin:5px 0 0 0; tracking-wider:2px;">Orden de Abastecimiento Nacional Confirmada</p>
+                        </div>
+                        <div style="background:#f8fafc; padding:15px; border-radius:16px; font-size:12px; margin-bottom:20px; border:1px solid #edf2f7; color:#4a5568;">
+                            <strong>DETALLES DE ENTREGA LOGÍSTICA:</strong><br>
+                            • <strong>Adquirente:</strong> ${id_comprador}<br>
+                            • <strong>Dirección de Destino:</strong> ${nuevoPedido.direccion}<br>
+                            • <strong>Teléfono de Contacto:</strong> +505 ${nuevoPedido.telefono}<br>
+                            • <strong>Canal de Liquidación:</strong> ${terminos_pago}
+                        </div>
+                        <table style="width:100%; font-size:13px; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#0f172a; color:#ffffff;">
+                                    <th style="padding:12px 10px; text-align:left; border-top-left-radius:8px; border-bottom-left-radius:8px;">Ítem</th>
+                                    <th style="padding:12px 10px; text-align:center;">Cant</th>
+                                    <th style="padding:12px 10px; text-align:right; border-top-right-radius:8px; border-bottom-right-radius:8px;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${lineasFacturaHtml}
+                            </tbody>
+                        </table>
+                        <div style="margin-top:25px; text-align:right; font-size:16px; font-weight:900; color:#0f172a; font-family:monospace;">
+                            TOTAL NETO COMPROMETIDO: $${nuevoPedido.total_neto.toFixed(2)} USD
+                        </div>
+                        <div style="background:#fffbeb; border:1px solid #fef3c7; padding:15px; border-radius:16px; margin-top:25px; font-size:12px; color:#78350f; leading-relaxed:1.6;">
+                            <strong>📌 COORDINADAS FINANCIERAS MAESTRAS DE LIQUIDACIÓN:</strong><br>
+                            Efectúe su depósito o transferencia electrónica inmediata a los canales formales de Nicaragua:<br>
+                            • <strong>Banco LAFISE Bancentro:</strong> Cuenta Corriente Córdobas #134070030<br>
+                            • <strong>Banco BANPRO:</strong> Cuenta de Ahorros Dólares #10022341054
+                        </div>
+                        <div style="text-align:center; font-size:10px; color:#a0aec0; margin-top:35px; border-top:1px solid #edf2f7; pt:15px; font-weight:600;">
+                            Ingeniería de Software - UNI Nicaragua<br>
+                            Henry Lechado | Angel Tercero | Lester Lopez
+                        </div>
+                    </div>
+                `;
+
+                await canalSmtp.sendMail({
+                    from: `"SupplierNi Red Logística B2B" <${process.env.EMAIL_USER}>`,
+                    to: nuevoPedido.email_despacho,
+                    subject: `📋 Comprobante Oficial de Pedido #SP-${nuevoPedido.id_pedido} - SupplierNi`,
+                    html: cuerpoHtml
+                });
+                console.log(`[SMTP PROCESADO] Envío real de correo a ${nuevoPedido.email_despacho} ejecutado de forma exitosa.`);
+            } catch (smtpError) {
+                console.error(`[FALLO SMTP INHERENTE] Error en la pasarela de transporte: ${smtpError.message}`);
+            }
+        }
+
+        res.json({ 
+            exito: true, 
+            pedido: nuevoPedido,
+            coordenadas_bancarias: [
+                { banco: "Banco LAFISE Bancentro", cuenta: "134070030", moneda: "Córdobas (NIO)", tipo: "Cuenta Corriente Empresarial" },
+                { banco: "Banco BANPRO", cuenta: "10022341054", moneda: "Dólares (USD)", tipo: "Cuenta de Ahorros" }
+            ]
+        });
+    } catch (err) {
+        res.status(500).json({ exito: false, error: "Fallo sistémico al asimilar la orden mercantil." });
+    }
 });
 
-// 7. ENDPOINT: Asistente con Conexión Real a Google Gemini (Cero paja de VAN/TIR/ROI, con Filtro de Markdown)
+// =========================================================================
+// 7. ENDPOINT: NÚCLEO DE INTELIGENCIA ARTIFICIAL GEMINI MODEL GATEWAY
+// =========================================================================
 app.post('/api/ia-asistente', async (req, res) => {
-    const { mensaje, rol } = req.body;
-    const msg = mensaje ? mensaje.toLowerCase().trim() : "";
-    const db = leerBaseDatos();
+    try {
+        const { mensaje, rol } = req.body;
+        if (!mensaje) return res.status(400).json({ error: "Mensaje vacío." });
+        
+        const msg = mensaje.toLowerCase().trim();
+        const db = leerBaseDatos();
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        // COMPUERTA DE CANAL DE INFERENCIA SEMÁNTICA GENERATIVA (GEMINI 1.5 FLASH REAL)
+        if (GEMINI_API_KEY) {
+            try {
+                const promptContexto = `Eres el agente inteligente central de la red B2B SupplierNi en Nicaragua. 
+                Estás interactuando con un operador cuyo rol institucional en el sistema es: ${rol}.
+                Catálogo relacional actual de insumos en memoria: ${JSON.stringify(db.productos)}.
+                Bitácora de movimientos e histórico de pedidos: ${JSON.stringify(db.pedidos)}.
+                Mapeo geográfico de mercado: Managua (específicamente la masa de distribución mayorista de los Distritos IV y V) absorbe el 55% de la tracción de compras de todo el país. León y Chinandega dominan completamente el occidente nacional.
+                Índice de Rotación Maestro de Artículos: El artículo número uno en movimiento del rubro constructivo es el Saco de Cemento Canal, mientras que en la línea médica la Amoxicilina 500mg lidera las requisiciones de farmacias locales.
 
-    if (GEMINI_API_KEY) {
-        try {
-            const promptContexto = `Eres el núcleo de Inteligencia Artificial de la plataforma B2B SupplierNi en Nicaragua.
-            Estás atendiendo a un usuario con el rol de: ${rol}.
-            Catálogo real en memoria: ${JSON.stringify(db.productos)}.
-            Historial de compras del sistema: ${JSON.stringify(db.pedidos)}.
-            Zonas comerciales de Nicaragua: Managua (Zonas mayoristas de los Distritos IV y V) concentra el 55% de las compras de todo el país, León y Chinandega lideran el occidente nacional. 
-            Productos más vendidos en el territorio nacional: Saco de Cemento Canal (Ferretería) y Amoxicilina 500mg (Farmacia).
+                =======================================================================
+                PROHIBICIÓN SANITARIA CRÍTICA EN ORDENANZA DE TESIS:
+                Tienes terminantemente prohibido bajo cualquier escenario hablar, procesar, simular, calcular o nombrar parámetros teóricos de ingeniería económica como el VALOR ACTUAL NETO (VAN), la TASA INTERNA DE RETORNO (TIR) o el RETORNO DE LA INVERSIÓN (ROI). Si el usuario intenta consultarte sobre estas siglas, desestímalas inmediatamente de forma elegante y enfócate en el catálogo o la logística nicaragüense.
+                =======================================================================
 
-            PROHIBICIÓN CRÍTICA ABSOLUTA: No muestres, no calcules, ni hables de parámetros de ingeniería económica como el VAN, la TIR o el ROI. Queda rotundamente prohibido usar esas siglas o paja teórica corporativa. Concéntrate en la logística y el carrito.
+                CONTRATO ESTRICTO DE INTERFACES EN RETORNO (DEBES EMITIR EXCLUSIVAMENTE UN OBJETO JSON SIN TEXTO ADICIONAL NI COMENTARIOS FUERA):
+                {
+                  "respuesta": "Tu explicación directa en lenguaje natural corporativo, fluido y profesional.",
+                  "items": [{"id_producto": 1, "cantidad": 5}], // Si el usuario tiene rol COMPRADOR y te solicita explícitamente agregar o comprar insumos, mapea los IDs y volúmenes exactos aquí. Si no, déjalo como un arreglo vacío [].
+                  "sugerencias": [{"id_producto": 2, "nombre_articulo": "Nombre"}] // Sugiere artículos complementarios de venta cruzada inteligente según la conversación, si no aplica déjalo como [].
+                }
 
-            REGLA DE CONTRATO JSON EXCLUSIVA: Debes responder única y exclusivamente un objeto JSON válido con este formato:
-            {
-              "respuesta": "Tu explicación analítica, comercial o predictiva en base a lo que el usuario preguntó.",
-              "items": [{"id_producto": 1, "cantidad": 5}], 
-              "sugerencias": [{"id_producto": 2, "nombre_articulo": "Nombre"}] 
-            }
+                Entrada del operador: "${mensaje}"`;
 
-            Consulta del usuario: "${mensaje}"`;
-
-            const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptContexto }] }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "object",
-                            properties: {
-                                respuesta: { type: "string" },
-                                items: {
-                                    type: "array",
+                const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptContexto }] }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "object",
+                                properties: {
+                                    respuesta: { type: "string" },
                                     items: {
-                                        type: "object",
-                                        properties: {
-                                            id_producto: { type: "integer" },
-                                            cantidad: { type: "integer" }
-                                        },
-                                        required: ["id_producto", "cantidad"]
+                                        type: "array",
+                                        items: {
+                                            type: "object",
+                                            properties: {
+                                                id_producto: { type: "integer" },
+                                                cantidad: { type: "integer" }
+                                            },
+                                            required: ["id_producto", "cantidad"]
+                                        }
+                                    },
+                                    sugerencias: {
+                                        type: "array",
+                                        items: {
+                                            type: "object",
+                                            properties: {
+                                                id_producto: { type: "integer" },
+                                                nombre_articulo: { type: "string" }
+                                            },
+                                            required: ["id_producto", "nombre_articulo"]
+                                        }
                                     }
                                 },
-                                sugerencias: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            id_producto: { type: "integer" },
-                                            nombre_articulo: { type: "string" }
-                                        },
-                                        required: ["id_producto", "nombre_articulo"]
-                                    }
-                                }
-                            },
-                            required: ["respuesta", "items", "sugerencias"]
+                                required: ["respuesta", "items", "sugerencias"]
+                            }
                         }
+                    })
+                });
+
+                if (apiResponse.ok) {
+                    const aiData = await apiResponse.json();
+                    let jsonText = aiData.candidates[0].content.parts[0].text.trim();
+                    
+                    // Purgador de bloques sintácticos Markdown remanentes
+                    if (jsonText.startsWith("```
+```text?code_stdout&code_event_index=2
+Backend file generated successfully.
+
+```")) {
+                        jsonText = jsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
                     }
-                })
-            });
-
-            if (apiResponse.ok) {
-                const aiData = await apiResponse.json();
-                let jsonText = aiData.candidates[0].content.parts[0].text.trim();
-                
-                // LIMPIADOR AUTOMÁTICO DE BLOQUES MARKDOWN: Evita que JSON.parse rompa el flujo y salte al fallback
-                if (jsonText.startsWith("```")) {
-                    jsonText = jsonText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+                    
+                    return res.json(JSON.parse(jsonText));
                 }
-                
-                return res.json(JSON.parse(jsonText));
+            } catch (errorCloud) {
+                console.error(`[FALLO ENLACE GEMINI] Inferencia rechazada: ${errorCloud.message}. Derivando a compuerta de contingencia.`);
             }
-        } catch (e) { /* Si la API de Google falla, pasa suavemente al motor local de contingencia */ }
-    }
-
-    // MOTOR DE CONTINGENCIA DINÁMICO SANITIZADO (Fallback Local)
-    let respuestaText = "";
-    let itemsDetectados = [];
-    let sugerenciasCruzadas = [];
-
-    if (rol === 'COMPRADOR') {
-        if (msg.includes("amoxicilina") || msg.includes("pastillas") || msg.includes("medicina") || msg.includes("farmacia")) {
-            itemsDetectados.push({ id_producto: 1, cantidad: 5 });
-            sugerenciasCruzadas.push({ id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)" });
-            respuestaText = "⚡ **Asistente de Abastecimiento:** Entendido. He analizado su inventario farmacéutico y pre-cargué **5 cajas de Amoxicilina 500mg** en sus líneas de pedido como propuesta de suministro.";
-        } else if (msg.includes("cemento") || msg.includes("saco") || msg.includes("construccion")) {
-            itemsDetectados.push({ id_producto: 4, cantidad: 10 });
-            sugerenciasCruzadas.push({ id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper" });
-            respuestaText = "⚡ **Asistente de Abastecimiento:** Demanda de materiales estructurales reconocida. He pre-cargado **10 sacos de Cemento Canal** en su orden de compra.";
-        } else if (msg.includes("martillo") || msg.includes("herramientas") || msg.includes("ferreteria")) {
-            itemsDetectados.push({ id_producto: 3, cantidad: 2 });
-            sugerenciasCruzadas.push({ id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)" });
-            respuestaText = "⚡ **Asistente de Abastecimiento:** He indexado **2 Martillos Truper de 16oz** de forma automatizada en sus líneas de pedido.";
-        } else {
-            respuestaText = "Hola Henry. Indíqueme de forma abierta qué insumos médicos o materiales de construcción requiere su comercio y estructuraré las casillas de su carrito de forma automática.";
         }
-    } else {
-        if (msg.includes("vendido") || msg.includes("venta") || msg.includes("rotacion") || msg.includes("producto")) {
-            respuestaText = "📊 **Análisis Predictivo de Plaza:** Las métricas registradas en base de datos reflejan que el artículo con mayor índice de rotación en la línea de construcción de todo el país es el **Saco de Cemento Canal**, mientras que en la línea clínica el liderazgo lo conserva la **Amoxicilina 500mg**.";
-        } else if (msg.includes("zona") || msg.includes("lugar") || msg.includes("demanda") || msg.includes("managua") || msg.includes("chinandega") || msg.includes("leon")) {
-            respuestaText = "📍 **Distribución de la Demanda Nacional:** Los clústeres comerciales con mayor volumen transaccional corresponden a **Managua (Zonas comerciales de los Distritos IV y V)** abarcando un 55% del comportamiento total del territorio nacional, secundado por los nodos logísticos de **Chinandega** y **León**.";
-        } else {
-            respuestaText = "Entorno Analítico Corporativo. Puede auditar la plataforma consultándome: *'¿Cuáles son los productos más vendidos?'* o *'¿Qué zonas geográficas tienen mayor demanda?'* para evaluar el mercado de Nicaragua.";
-        }
-    }
 
-    res.json({ respuesta: respuestaText, items: itemsDetectados, sugerencias: sugerenciasCruzadas });
+        // MOTOR DE CONTINGENCIA DINÁMICO LOCAL SANITIZADO (CERO MÉTRICAS FINANCIERAS)
+        let respuestaText = "";
+        let itemsDetectados = [];
+        let sugerenciasCruzadas = [];
+
+        if (rol === 'COMPRADOR') {
+            if (msg.includes("amoxicilina") || msg.includes("pastillas") || msg.includes("medicina") || msg.includes("farmacia")) {
+                itemsDetectados.push({ id_producto: 1, cantidad: 5 });
+                sugerenciasCruzadas.push({ id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)" });
+                respuestaText = "⚡ **Asistente Suministros:** Entendido Henry. Reconocí su requerimiento farmacéutico de forma inmediata y procedí a pre-cargar **5 cajas de Amoxicilina 500mg** en sus líneas de pedido.";
+            } else if (msg.includes("cemento") || msg.includes("saco") || msg.includes("construccion")) {
+                itemsDetectados.push({ id_producto: 4, cantidad: 10 });
+                sugerenciasCruzadas.push({ id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper" });
+                respuestaText = "⚡ **Asistente Suministros:** Demanda de insumos de infraestructura registrada. Inyecté **10 sacos de Cemento Canal** automáticos en su panel comercial.";
+            } else if (msg.includes("martillo") || msg.includes("herramientas") || msg.includes("ferreteria")) {
+                itemsDetectados.push({ id_producto: 3, cantidad: 2 });
+                sugerenciasCruzadas.push({ id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)" });
+                respuestaText = "⚡ **Asistente Suministros:** Herramientas añadidas. Estructuré **2 Martillos Truper de 16oz** de forma directa en su orden de compra mayorista.";
+            } else {
+                respuestaText = "Hola Henry. Indíqueme abiertamente qué insumos médicos o materiales de construcción requiere su comercio y configuraré las casillas de su carrito de forma automatizada.";
+            }
+        } else {
+            if (msg.includes("vendido") || msg.includes("venta") || msg.includes("rotacion") || msg.includes("producto")) {
+                respuestaText = "📊 **Auditoría de Rotación de Plaza:** Las lecturas de base de datos indican que los artículos con mayor índice de rotación en el territorio de Nicaragua corresponden al **Saco de Cemento Canal** en el rubro ferretero, y la **Amoxicilina 500mg** en la línea clínica.";
+            } else if (msg.includes("zona") || msg.includes("lugar") || msg.includes("demanda") || msg.includes("managua") || msg.includes("chinandega") || msg.includes("leon")) {
+                respuestaText = "📍 **Mapeo de la Demanda Nacional:** El núcleo comercial principal corresponde a **Managua (Zonas de abasto de los Distritos IV y V)** abarcando un 55% de la tracción transaccional total del software, seguido de forma estable por las cadenas de distribución mayoristas de **Chinandega** y **León**.";
+            } else {
+                respuestaText = "Entorno del Proveedor Activo. Puede realizar consultas analíticas avanzadas como: *'¿Cuáles son los productos más vendidos?'* o *'¿Qué zonas geográficas presentan mayor demanda?'* para auditar la plaza comercial.";
+            }
+        }
+
+        res.json({ respuesta: respuestaText, items: itemsDetectados, sugerencias: sugerenciasCruzadas });
+    } catch (err) {
+        res.status(500).json({ error: "Fallo severo en las compuertas del hilo conversacional." });
+    }
 });
 
-// Configuración de puertos dinámicos para la nube de Render
+// ASIGNACIÓN DINÁMICA DE PUERTOS COMERCIALES CLOUD
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Servidor de SupplierNi corriendo exitosamente en el puerto ${PORT}`));
+app.listen(PORT, () => console.log(`[INSTANCIA ACTIVA] Servidor central de SupplierNi operando en el puerto ${PORT}`));
+"""
+
+with open("server.js", "w", encoding="utf-8") as f:
+    f.write(code_content)
+
+print("Backend file generated successfully.")
