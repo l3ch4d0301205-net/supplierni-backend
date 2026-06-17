@@ -159,26 +159,13 @@ const guardarBaseDatos = (datos) => {
 // CONTROLADOR LOGÍSTICO SMTP ULTRA-COMPATIBLE (CONFIGURACIÓN INCOPTABLE)
 // =========================================================================
 const configurarTransporterB2B = () => {
-    const cuentaEmisora = process.env.EMAIL_USER;
-    const tokenAplicacion = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : ''; 
-
-    if (!cuentaEmisora || !tokenAplicacion) {
-        console.warn("[DIAGNÓSTICO SMTP] ALERTA: Faltan las llaves en Environment.");
-        return null;
-    }
-
-    // Cambiamos a configuración explícita por puerto 587 (STARTTLS)
     return nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: 'smtp-relay.brevo.com',
         port: 587,
-        secure: false, // false para puerto 587; STARTTLS requiere que sea false inicialmente
+        secure: false,
         auth: {
-            user: cuentaEmisora, 
-            pass: tokenAplicacion  
-        },
-        tls: {
-            // Esto evita que Render rechace el certificado de Gmail o viceversa
-            rejectUnauthorized: false
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
         }
     });
 };
