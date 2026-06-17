@@ -156,28 +156,28 @@ const guardarBaseDatos = (datos) => {
 };
 
 // =========================================================================
-// CONTROLADOR LOGÍSTICO Y DIAGNÓSTICO SMTP (NODEMAILER CORREGIDO)
+// CONTROLADOR LOGÍSTICO SMTP ULTRA-COMPATIBLE (CONFIGURACIÓN INCOPTABLE)
 // =========================================================================
 const configurarTransporterB2B = () => {
     const cuentaEmisora = process.env.EMAIL_USER;
-    // Remueve de forma agresiva cualquier espacio en blanco intermedio inyectado por las claves de Google App
     const tokenAplicacion = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : ''; 
 
     if (!cuentaEmisora || !tokenAplicacion) {
-        console.warn("[DIAGNÓSTICO SMTP] ALERTA: Faltan las llaves EMAIL_USER o EMAIL_PASS en las variables de entorno de Render. El servidor funcionará en modo de simulación segura de envío.");
+        console.warn("[DIAGNÓSTICO SMTP] ALERTA: Faltan las llaves en Environment.");
         return null;
     }
 
+    // Cambiamos a configuración explícita por puerto 587 (STARTTLS)
     return nodemailer.createTransport({
-        service: 'gmail',
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false, // false para puerto 587; STARTTLS requiere que sea false inicialmente
         auth: {
             user: cuentaEmisora, 
             pass: tokenAplicacion  
         },
         tls: {
+            // Esto evita que Render rechace el certificado de Gmail o viceversa
             rejectUnauthorized: false
         }
     });
