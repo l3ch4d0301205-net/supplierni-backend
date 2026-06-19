@@ -626,24 +626,28 @@ app.post('/api/ia-asistente', async (req, res) => {
             }
         }
 
-        // MOTOR DE CONTINGENCIA DINÁMICO LOCAL SANITIZADO (CERO MÉTRICAS FINANCIERAS)
+// MOTOR DE CONTINGENCIA DINÁMICO LOCAL (DETECTA CANTIDADES AUTOMÁTICAMENTE)
         let respuestaText = "";
         let itemsDetectados = [];
         let sugerenciasCruzadas = [];
 
+        // BUSCADOR DE NÚMEROS: Busca cualquier número en el mensaje. Si no hay, usa 1 por defecto.
+        const matchCantidad = msg.match(/\d+/); 
+        const cantidadExtraida = matchCantidad ? parseInt(matchCantidad[0]) : 1;
+
         if (rol === 'COMPRADOR') {
             if (msg.includes("amoxicilina") || msg.includes("pastillas") || msg.includes("medicina") || msg.includes("farmacia")) {
-                itemsDetectados.push({ id_producto: 1, cantidad: 5 });
+                itemsDetectados.push({ id_producto: 1, cantidad: cantidadExtraida });
                 sugerenciasCruzadas.push({ id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)" });
-                respuestaText = "⚡ **Asistente Suministros:** Entendido Henry. Reconocí su requerimiento farmacéutico de forma inmediata y procedí a pre-cargar **5 cajas de Amoxicilina 500mg** en sus líneas de pedido.";
+                respuestaText = `⚡ **Asistente Suministros:** Entendido Henry. Reconocí su requerimiento y procedí a pre-cargar ${cantidadExtraida} unidad(es) de Amoxicilina 500mg en sus líneas de pedido.`;
             } else if (msg.includes("cemento") || msg.includes("saco") || msg.includes("construccion")) {
-                itemsDetectados.push({ id_producto: 4, cantidad: 10 });
+                itemsDetectados.push({ id_producto: 4, cantidad: cantidadExtraida });
                 sugerenciasCruzadas.push({ id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper" });
-                respuestaText = "⚡ **Asistente Suministros:** Demanda de insumos de infraestructura registrada. Inyecté **10 sacos de Cemento Canal** automáticos en su panel comercial.";
+                respuestaText = `⚡ **Asistente Suministros:** Demanda de infraestructura registrada. Inyecté ${cantidadExtraida} saco(s) de Cemento Canal en su panel comercial.`;
             } else if (msg.includes("martillo") || msg.includes("herramientas") || msg.includes("ferreteria")) {
-                itemsDetectados.push({ id_producto: 3, cantidad: 2 });
+                itemsDetectados.push({ id_producto: 3, cantidad: cantidadExtraida });
                 sugerenciasCruzadas.push({ id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)" });
-                respuestaText = "⚡ **Asistente Suministros:** Herramientas añadidas. Estructuré **2 Martillos Truper de 16oz** de forma directa en su orden de compra mayorista.";
+                respuestaText = `⚡ **Asistente Suministros:** Herramientas añadidas. Estructuré ${cantidadExtraida} martillo(s) Truper de 16oz en su orden de compra mayorista.`;
             } else {
                 respuestaText = "Hola Henry. Indíqueme abiertamente qué insumos médicos o materiales de construcción requiere su comercio y configuraré las casillas de su carrito de forma automatizada.";
             }
