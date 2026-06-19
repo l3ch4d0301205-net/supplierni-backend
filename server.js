@@ -110,37 +110,34 @@ const semillaInicial = {
     pedidos: []
 };
 
-// =========================================================================
-// SISTEMA DE PERSISTENCIA CON MECANISMOS DE COPIA DE SEGURIDAD AUTOMÁTICA
-// =========================================================================
 const leerBaseDatos = () => {
+    // Si el archivo no existe, iniciamos desde cero (esto solo pasa la primera vez)
     if (!fs.existsSync(DB_FILE)) {
+        console.log("[SISTEMA] Archivo no encontrado. Inicializando...");
         fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
         return semillaInicial;
     }
+
     try {
+        // LEEMOS el archivo actual
         const contenido = fs.readFileSync(DB_FILE, 'utf-8');
-        if (!contenido || contenido.trim() === '') {
-            throw new Error("Archivo vacío detectado.");
-        }
-        const datos = JSON.parse(contenido);
-        if (!datos.usuarios || !datos.productos || !datos.pedidos) {
-            throw new Error("Falta integridad en esquemas requeridos.");
-        }
-        return datos;
+        if (!contenido || contenido.trim() === '') return semillaInicial;
+        
+        return JSON.parse(contenido);
     } catch (error) {
-        console.error(`[REPARACIÓN DE BASE DE DATOS] Fallo estructural en db.json: ${error.message}. Activando respaldo.`);
+        console.error(`[ERROR CRÍTICO] Corrupción de datos: ${error.message}`);
+        
+        // Si falló la lectura, intentamos usar el respaldo (bak)
         if (fs.existsSync(BACKUP_FILE)) {
             try {
                 const respaldo = fs.readFileSync(BACKUP_FILE, 'utf-8');
-                fs.writeFileSync(DB_FILE, respaldo);
-                console.log("[REPARACIÓN DE BASE DE DATOS] Clonación de db.json.bak completada con éxito.");
                 return JSON.parse(respaldo);
             } catch (bakError) {
-                console.error("[REPARACIÓN DE BASE DE DATOS] El archivo de respaldo también está corrupto. Hard reset.");
+                console.error("[ERROR] Respaldo también corrupto.");
             }
         }
-        fs.writeFileSync(DB_FILE, JSON.stringify(semillaInicial, null, 2));
+        
+        // Solo si todo falló, retornamos la semilla.
         return semillaInicial;
     }
 };
@@ -553,6 +550,11 @@ app.post('/api/ia-asistente', async (req, res) => {
                 Bitácora de movimientos e histórico de pedidos: ${JSON.stringify(db.pedidos)}.
                 Mapeo geográfico de mercado: Managua (específicamente la masa de distribución mayorista de los Distritos IV y V) absorbe el 55% de la tracción de compras de todo el país. León y Chinandega dominan completamente el occidente nacional.
                 Índice de Rotación Maestro de Artículos: El artículo número uno en movimiento del rubro constructivo es el Saco de Cemento Canal, mientras que en la línea médica la Amoxicilina 500mg lidera las requisiciones de farmacias locales.
+                
+"REGLA DE ORO DE CANTIDADES: Si el usuario menciona un número (ej: '5 martillos'), 
+ DEBES extraer ese número exacto en la propiedad 'cantidad'. 
+ NUNCA inventes cantidades por defecto. Si el usuario dice 'martillo' (sin número), 
+ asume cantidad: 1. Tu prioridad es la precisión numérica extraída del texto."
 
                 =======================================================================
                 PROHIBICIÓN SANITARIA CRÍTICA EN ORDENANZA DE TESIS:
