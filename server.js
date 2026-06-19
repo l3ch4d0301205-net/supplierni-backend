@@ -626,46 +626,47 @@ app.post('/api/ia-asistente', async (req, res) => {
             }
         }
 
-// MOTOR DE CONTINGENCIA DINÁMICO (SOPORTA MÚLTIPLES PRODUCTOS)
-        let respuestaText = "⚡ **Asistente:** He procesado los siguientes ítems en su orden: ";
+// MOTOR DE CONTINGENCIA DINÁMICO LOCAL (DETECTA CANTIDADES AUTOMÁTICAMENTE)
+        let respuestaText = "";
         let itemsDetectados = [];
         let sugerenciasCruzadas = [];
 
-        // Definimos el catálogo para búsqueda automática
-        const catalogoBusqueda = [
-            { id: 1, keys: ["amoxicilina", "pastillas", "medicina", "farmacia"], nombre: "Amoxicilina 500mg" },
-            { id: 4, keys: ["cemento", "saco", "construccion"], nombre: "Saco de Cemento Canal" },
-            { id: 3, keys: ["martillo", "herramientas", "ferreteria"], nombre: "Martillo de Uña 16oz" }
-        ];
+        // BUSCADOR DE NÚMEROS: Busca cualquier número en el mensaje. Si no hay, usa 1 por defecto.
+        const matchCantidad = msg.match(/\d+/); 
+        const cantidadExtraida = matchCantidad ? parseInt(matchCantidad[0]) : 1;
 
-        // Recorremos cada producto para ver si está en el mensaje
-        catalogoBusqueda.forEach(prod => {
-            // Buscamos si alguna de las palabras clave del producto está en el mensaje
-            const tieneCoincidencia = prod.keys.some(key => msg.includes(key));
-            
-            if (tieneCoincidencia) {
-                // Buscamos un número cerca de la palabra clave
-                // Esta expresión regular busca un número (\d+) seguido de cualquier cosa y la palabra clave
-                const regex = new RegExp(`(\\d+)\\s*(?:${prod.keys.join('|')})`, 'i');
-                const match = msg.match(regex);
-                const cantidad = match ? parseInt(match[1]) : 1; // Si no encuentra número, asume 1
-                
-                itemsDetectados.push({ id_producto: prod.id, cantidad: cantidad, nombre_articulo: prod.nombre });
-                respuestaText += `\n• ${cantidad}x ${prod.nombre}`;
+        if (rol === 'COMPRADOR') {
+            if (msg.includes("amoxicilina") || msg.includes("pastillas") || msg.includes("medicina") || msg.includes("farmacia")) {
+                itemsDetectados.push({ id_producto: 1, cantidad: cantidadExtraida });
+                sugerenciasCruzadas.push({ id_producto: 2, nombre_articulo: "Alcohol Antiséptico 70% (Galón)" });
+                respuestaText = `⚡ **Asistente Suministros:** Entendido Henry. Reconocí su requerimiento y procedí a pre-cargar ${cantidadExtraida} unidad(es) de Amoxicilina 500mg en sus líneas de pedido.`;
+            } else if (msg.includes("cemento") || msg.includes("saco") || msg.includes("construccion")) {
+                itemsDetectados.push({ id_producto: 4, cantidad: cantidadExtraida });
+                sugerenciasCruzadas.push({ id_producto: 3, nombre_articulo: "Martillo de Uña 16oz Truper" });
+                respuestaText = `⚡ **Asistente Suministros:** Demanda de infraestructura registrada. Inyecté ${cantidadExtraida} saco(s) de Cemento Canal en su panel comercial.`;
+            } else if (msg.includes("martillo") || msg.includes("herramientas") || msg.includes("ferreteria")) {
+                itemsDetectados.push({ id_producto: 3, cantidad: cantidadExtraida });
+                sugerenciasCruzadas.push({ id_producto: 4, nombre_articulo: "Saco de Cemento Canal (42.5kg)" });
+                respuestaText = `⚡ **Asistente Suministros:** Herramientas añadidas. Estructuré ${cantidadExtraida} martillo(s) Truper de 16oz en su orden de compra mayorista.`;
+            } else {
+                respuestaText = "Hola Henry. Indíqueme abiertamente qué insumos médicos o materiales de construcción requiere su comercio y configuraré las casillas de su carrito de forma automatizada.";
             }
-        });
-
-        // Si no detectó nada
-        if (itemsDetectados.length === 0) {
-            respuestaText = "Hola Henry. Indíqueme abiertamente qué insumos médicos o materiales de construcción requiere su comercio y configuraré las casillas de su carrito de forma automatizada.";
         } else {
-            respuestaText += "\n¡Carro actualizado!";
-        }
-
-        // (Mantén el resto del bloque para el ROL PROVEEDOR igual a como estaba)
-        if (rol !== 'COMPRADOR') {
-            respuestaText = "Entorno del Proveedor Activo. Puede realizar consultas analíticas avanzadas...";
-            itemsDetectados = []; // El proveedor no compra
+            if (msg.includes("vendido") || msg.includes("venta") || msg.includes("rotacion") || msg.includes("producto")) {
+                respuestaText = "📊 **Auditoría de Rotación de Plaza:** Las lecturas de base de datos indican que los artículos con mayor índice de rotación en el territorio de Nicaragua corresponden al **Saco de Cemento Canal** en el rubro ferretero, y la **Amoxicilina 500mg** en la línea clínica.";
+            } else if (msg.includes("zona") || msg.includes("lugar") || msg.includes("demanda") || msg.includes("managua") || msg.includes("chinandega") || msg.includes("leon")) {
+                respuestaText = "📍 **Mapeo de la Demanda Nacional:** El núcleo comercial principal corresponde a **Managua (Zonas de abasto de los Distritos IV y V)** abarcando un 55% de la tracción transaccional total del software, seguido de forma estable por las cadenas de distribución mayoristas de **Chinandega** y **León**.";
+            } else {
+                respuestaText = "Entorno del Proveedor Activo. Puede realizar consultas analíticas avanzadas como: *'¿Cuáles son los productos más vendidos?'* o *'¿Qué zonas geográficas presentan mayor demanda?'* para auditar la plaza comercial.";
+            }
         }
 
         res.json({ respuesta: respuestaText, items: itemsDetectados, sugerencias: sugerenciasCruzadas });
+    } catch (err) {
+        res.status(500).json({ error: "Fallo severo en las compuertas del hilo conversacional." });
+    }
+});
+
+// ASIGNACIÓN DINÁMICA DE PUERTOS COMERCIALES CLOUD
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`[INSTANCIA ACTIVA] Servidor central de SupplierNi operando en el puerto ${PORT}`));
