@@ -170,7 +170,7 @@ const configurarTransporterB2B = () => {
     */
     return nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
-        port: 587,
+        port: 2525,
         secure: false, // TLS
         auth: {
             user: process.env.EMAIL_USER, // Credencial de login: af20b2001@smtp-brevo.com
