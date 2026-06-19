@@ -170,7 +170,7 @@ const configurarTransporterB2B = () => {
     */
     return nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
-        port: 2525,
+        port: 587,
         secure: false, // TLS
         auth: {
             user: process.env.EMAIL_USER, // Credencial de login: af20b2001@smtp-brevo.com
@@ -212,9 +212,9 @@ app.get('/', (req, res) => {
 });
 
 // =========================================================================
-// 1. ENDPOINT: REGISTRO COMERCIAL CON TOKEN OTP DE SEGURIDAD
+// 1. ENDPOINT: REGISTRO COMERCIAL CON ENVÍO DE TOKEN OTP POR CORREO
 // =========================================================================
-app.post('/api/registro', (req, res) => {
+app.post('/api/registro', async (req, res) => { // <-- Se añade 'async' aquí
     try {
         const { correo, contrasena, rol, nombre } = req.body;
         
@@ -245,8 +245,39 @@ app.post('/api/registro', (req, res) => {
         });
         guardarBaseDatos(db);
 
-        console.log(`[CONSOLA DE CONTROL] Token OTP generado para ${correoLimpio}: ${tokenOTP}`);
-        res.json({ exito: true, mensaje: "Pre-registro completado en la base de datos distribuida.", codigo_simulado: tokenOTP });
+        // ========================================================
+        // COMPUERTA DE ENVÍO SMTP DEL CÓDIGO DE VERIFICACIÓN
+        // ========================================================
+        const canalSmtp = configurarTransporterB2B();
+        if (canalSmtp) {
+            try {
+                const htmlOtp = `
+                    <div style="font-family:'Segoe UI',sans-serif; max-width:500px; margin:0 auto; padding:30px; border:1px solid #e2e8f0; border-radius:24px; text-align:center;">
+                        <h2 style="color:#0f172a; margin-top:0; letter-spacing:-1px;">Código de Verificación</h2>
+                        <p style="color:#64748b; font-size:14px;">Hola <strong>${nombre}</strong>,</p>
+                        <p style="color:#64748b; font-size:14px;">Tu token criptográfico para activar tu cuenta comercial en SupplierNi es:</p>
+                        <div style="margin:30px 0;">
+                            <span style="background:#f8fafc; border:1px solid #edf2f7; color:#10b981; font-size:32px; font-weight:900; letter-spacing:8px; padding:15px 25px; border-radius:12px;">${tokenOTP}</span>
+                        </div>
+                        <p style="color:#a0aec0; font-size:12px;">Ingresa este código en la plataforma para verificar tu identidad. Si no solicitaste este registro, puedes ignorar este correo.</p>
+                    </div>
+                `;
+
+                await canalSmtp.sendMail({
+                    from: '"SupplierNi Seguridad" <henrylechado41@gmail.com>', // Usa la cuenta validada para no tener rechazos de Brevo
+                    to: correoLimpio,
+                    subject: `🔐 Código de Acceso SupplierNi: ${tokenOTP}`,
+                    html: htmlOtp
+                });
+                console.log(`[SMTP PROCESADO] Correo de verificación enviado a ${correoLimpio}`);
+            } catch (errorSmtp) {
+                console.error(`[FALLO SMTP OTP] No se pudo enviar el correo de verificación: ${errorSmtp.message}`);
+            }
+        }
+
+        console.log(`[CONSOLA DE CONTROL] Token OTP asignado para ${correoLimpio}: ${tokenOTP}`);
+        // Ya NO mandamos el código simulado de vuelta por seguridad
+        res.json({ exito: true, mensaje: "Registro procesado exitosamente." });
     } catch (err) {
         res.status(500).json({ exito: false, error: "Fallo severo en el hilo de registros del servidor." });
     }
