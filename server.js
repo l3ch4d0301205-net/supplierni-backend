@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-const mongoose = require('mongoose');
+// CONTROLADOR NATIVO DE POSTGRESQL (REEMPLAZA A MONGOOSE COMPLETAMENTE)
+const { Pool } = require('pg');
 
 const app = express();
 
@@ -24,75 +25,52 @@ app.use((req, res, next) => {
 });
 
 // =========================================================================
-// CONEXIÓN A BASE DE DATOS MONGODB ATLAS (NUBE)
+// CONEXIÓN A BASE DE DATOS POSTGRESQL (NEON CLOUD)
 // =========================================================================
-mongoose.connect(process.env.MONGO_URI)
-    .then(async () => {
-        console.log("✅ [NÚCLEO] Conexión exitosa a MongoDB Atlas (SupplierNi B2B)");
-        await inicializarSemilla();
-    })
-    .catch(err => console.error("❌ [NÚCLEO] Error de conexión a BD:", err));
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_u3GsrVRx9tWk@ep-bitter-mud-beizette-pooler.c-9.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+    ssl: { rejectUnauthorized: false }
+});
 
-// =========================================================================
-// MODELOS DE DATOS (ESQUEMAS EN 3FN)
-// =========================================================================
-const Usuario = mongoose.model('Usuario', new mongoose.Schema({
-    correo: { type: String, required: true },
-    contrasena: { type: String, required: true },
-    rol: String,
-    nombre: String,
-    estado: String,
-    codigo_verificacion: String
-}));
-
-const Producto = mongoose.model('Producto', new mongoose.Schema({
-    id_producto: Number,
-    nombre_articulo: String,
-    precio_mayorista: Number,
-    stock_disponible: Number,
-    categoria: String,
-    imagen_url: String,
-    creado_por: String
-}));
-
-const Pedido = mongoose.model('Pedido', new mongoose.Schema({
-    id_pedido: Number,
-    id_comprador: String,
-    items: Array,
-    subtotal_neto: Number,
-    iva_15: Number,
-    total_neto: Number,
-    terminos_pago: String,
-    email_despacho: String,
-    direccion: String,
-    telefono: String,
-    fecha: String
-}));
+pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+        console.error('❌ [NÚCLEO] Error de conexión a PostgreSQL Neon:', err.message);
+    } else {
+        console.log('✅ [NÚCLEO] Conexión exitosa a PostgreSQL Neon (SupplierNi B2B):', res.rows[0].now);
+        inicializarSemilla();
+    }
+});
 
 // =========================================================================
 // MATRIZ DE SEMILLA INICIAL ENRIQUECIDA (SECTOR FERRETERO NICARAGÜENSE)
 // =========================================================================
 const inicializarSemilla = async () => {
-    const countUsuarios = await Usuario.countDocuments();
-    if (countUsuarios === 0) {
-        console.log("[SISTEMA] BD Usuarios vacía. Inicializando entidades ferreteras...");
-        await Usuario.insertMany([
-            { correo: "proveedor@gmail.com", contrasena: "1234", rol: "PROVEEDOR", nombre: "Distribuidora Mayorista Industrial", estado: "VERIFICADO", codigo_verificacion: null },
-            { correo: "comprador@gmail.com", contrasena: "1234", rol: "COMPRADOR", nombre: "Ferretería El Progreso", estado: "VERIFICADO", codigo_verificacion: null }
-        ]);
-    }
+    try {
+        const countUsuarios = await pool.query('SELECT COUNT(*) FROM usuarios');
+        if (parseInt(countUsuarios.rows[0].count) === 0) {
+            console.log("[SISTEMA] BD Usuarios vacía. Inicializando entidades ferreteras...");
+            await pool.query(`
+                INSERT INTO usuarios (correo_corporativo, contrasena_hash, id_rol, estado_usuario, codigo_otp) VALUES
+                ('proveedor@gmail.com', '1234', 2, 'VERIFICADO', NULL),
+                ('comprador@gmail.com', '1234', 1, 'VERIFICADO', NULL)
+            `);
+        }
 
-    const countProductos = await Producto.countDocuments();
-    if (countProductos === 0) {
-        console.log("[SISTEMA] BD Productos vacía. Cargando catálogo ferretero maestro...");
-        await Producto.insertMany([
-            { id_producto: 1, nombre_articulo: "Tubo PVC Presión 1/2\" x 6m Sch 40 (Amanco)", precio_mayorista: 2.35, stock_disponible: 120, categoria: "Fontanería", imagen_url: "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80&sig=1", creado_por: "Distribuidora Mayorista Industrial" },
-            { id_producto: 2, nombre_articulo: "Martillo de Uña 16oz Truper Profesional", precio_mayorista: 6.50, stock_disponible: 45, categoria: "Herramientas", imagen_url: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=600&q=80&sig=2", creado_por: "Distribuidora Mayorista Industrial" },
-            { id_producto: 3, nombre_articulo: "Saco de Cemento Canal Estructural (42.5kg)", precio_mayorista: 8.50, stock_disponible: 200, categoria: "Construcción", imagen_url: "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&w=600&q=80&sig=3", creado_por: "Distribuidora Mayorista Industrial" },
-            { id_producto: 4, nombre_articulo: "Perno Grado 5 Zincado 1/2\" x 2\" (Pack x100)", precio_mayorista: 4.10, stock_disponible: 80, categoria: "Fijación", imagen_url: "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80&sig=4", creado_por: "Distribuidora Mayorista Industrial" },
-            { id_producto: 5, nombre_articulo: "Cinta Métrica 5m Truper TR-1502", precio_mayorista: 2.60, stock_disponible: 60, categoria: "Herramientas", imagen_url: "https://images.unsplash.com/photo-1531842477197-e3f85e40346e?auto=format&fit=crop&w=600&q=80&sig=5", creado_por: "Distribuidora Mayorista Industrial" },
-            { id_producto: 6, nombre_articulo: "Varilla de Hierro Corrugado 3/8\" x 6m", precio_mayorista: 4.80, stock_disponible: 150, categoria: "Construcción", imagen_url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80&sig=6", creado_por: "Distribuidora Mayorista Industrial" }
-        ]);
+        const countProductos = await pool.query('SELECT COUNT(*) FROM productos');
+        if (parseInt(countProductos.rows[0].count) === 0) {
+            console.log("[SISTEMA] BD Productos vacía. Cargando catálogo ferretero maestro...");
+            await pool.query(`
+                INSERT INTO productos (id_empresa_proveedor, id_subcategoria, id_marca, codigo_sku, nombre_articulo, precio_mayorista_usd, stock_disponible, imagen_url) VALUES
+                (1, 1, 1, 'PVC-SCH40-05', 'Tubo PVC Presión 1/2" x 6m Sch 40 (Amanco)', 2.35, 120, 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80&sig=1'),
+                (1, 2, 2, 'HERR-MART-16', 'Martillo de Uña 16oz Truper Profesional', 6.50, 45, 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=600&q=80&sig=2'),
+                (1, 3, 3, 'CEM-CANAL-42', 'Saco de Cemento Canal Estructural (42.5kg)', 8.50, 200, 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&w=600&q=80&sig=3'),
+                (1, 4, 2, 'PERN-GR5-052', 'Perno Grado 5 Zincado 1/2" x 2" (Pack x100)', 4.10, 80, 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80&sig=4'),
+                (1, 2, 2, 'HERR-CINT-5M', 'Cinta Métrica 5m Truper TR-1502', 2.60, 60, 'https://images.unsplash.com/photo-1531842477197-e3f85e40346e?auto=format&fit=crop&w=600&q=80&sig=5'),
+                (1, 3, 3, 'VAR-HIER-38', 'Varilla de Hierro Corrugado 3/8" x 6m', 4.80, 150, 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80&sig=6')
+            `);
+        }
+    } catch (err) {
+        console.error("[SISTEMA] Error al inicializar semilla PostgreSQL:", err.message);
     }
 };
 
@@ -130,11 +108,18 @@ const configurarTransporterB2B = () => {
 // =========================================================================
 // COMPUERTA DE ENTRADA AL SERVIDOR Y DIAGNÓSTICO
 // =========================================================================
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     const envUser = process.env.EMAIL_USER ? "CONFIGURADO DE FORMA CORRECTA" : "FALTA ASIGNAR EN ENVIRONMENT";
     const envPass = process.env.EMAIL_PASS ? "CONFIGURADO DE FORMA CORRECTA" : "FALTA ASIGNAR EN ENVIRONMENT";
     const envGemini = process.env.GEMINI_API_KEY ? "MODELO GEMINI REAL ACTIVO" : "FALLBACK DE CONTINGENCIA LOCAL FERRETERO ACTIVO";
-    const envMongo = process.env.MONGO_URI ? "CONEXIÓN A NUBE ESTABLECIDA" : "FALTA ASIGNAR MONGO_URI";
+    
+    let envDbStatus = "FALTA ASIGNAR DATABASE_URL";
+    try {
+        await pool.query('SELECT NOW()');
+        envDbStatus = "CONEXIÓN A NUBE ESTABLECIDA (POSTGRESQL NEON)";
+    } catch (e) {
+        envDbStatus = "FALLO AL CONECTAR A POSTGRESQL NEON";
+    }
 
     res.send(`
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin-top: 50px; color: #0f172a; padding: 20px; background: #fafafa;">
@@ -144,7 +129,7 @@ app.get('/', (req, res) => {
                 
                 <div style="text-align: left; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #edf2f7; font-size: 12px; font-family: monospace;">
                     <h3 style="margin-top: 0; color: #334155; font-size: 13px; font-family: sans-serif;">🔍 DIAGNÓSTICO DE COMPUERTAS CLOUD</h3>
-                    <p>• <strong>BASE DE DATOS:</strong> <span style="color: ${process.env.MONGO_URI ? '#059669' : '#dc2626'}">${envMongo}</span></p>
+                    <p>• <strong>BASE DE DATOS:</strong> <span style="color: ${process.env.DATABASE_URL ? '#059669' : '#dc2626'}">${envDbStatus}</span></p>
                     <p>• <strong>VARIABLE EMAIL_USER:</strong> <span style="color: ${process.env.EMAIL_USER ? '#059669' : '#dc2626'}">${envUser}</span></p>
                     <p>• <strong>VARIABLE EMAIL_PASS:</strong> <span style="color: ${process.env.EMAIL_PASS ? '#059669' : '#dc2626'}">${envPass}</span></p>
                     <p>• <strong>MOTOR DE IA FERRETERO:</strong> <span style="color: #2563eb;">${envGemini}</span></p>
@@ -158,7 +143,7 @@ app.get('/', (req, res) => {
 });
 
 // =========================================================================
-// 1. ENDPOINT: REGISTRO COMERCIAL CON ENVÍO DE TOKEN OTP (CORREGIDO)
+// 1. ENDPOINT: REGISTRO COMERCIAL CON ENVÍO DE TOKEN OTP
 // =========================================================================
 app.post('/api/registro', async (req, res) => {
     try {
@@ -172,23 +157,22 @@ app.post('/api/registro', async (req, res) => {
         }
 
         const correoLimpio = correo.toLowerCase().trim();
-        const existe = await Usuario.findOne({ correo: correoLimpio });
+        const existe = await pool.query('SELECT * FROM usuarios WHERE correo_corporativo = $1', [correoLimpio]);
         
-        if (existe) {
+        if (existe.rows.length > 0) {
             return res.status(400).json({ exito: false, error: "Esta entidad legal ya se encuentra inscrita en la red ferretera." });
         }
 
         const tokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Guardar el usuario en MongoDB
-        await Usuario.create({
-            correo: correoLimpio,
-            contrasena: contrasena.trim(),
-            rol: rol,
-            nombre: nombre.trim(),
-            estado: "PENDIENTE_VERIFICACION",
-            codigo_verificacion: tokenOTP
-        });
+        // Mapear el rol a su ID relacional (1: COMPRADOR, 2: PROVEEDOR)
+        const idRol = (rol.toUpperCase() === 'PROVEEDOR') ? 2 : 1;
+
+        // Guardar el usuario en PostgreSQL
+        await pool.query(`
+            INSERT INTO usuarios (correo_corporativo, contrasena_hash, id_rol, estado_usuario, codigo_otp)
+            VALUES ($1, $2, $3, 'PENDIENTE_VERIFICACION', $4)
+        `, [correoLimpio, contrasena.trim(), idRol, tokenOTP]);
 
         // Intentar envío de correo en un bloque seguro para que no bloquee el registro si falla el SMTP
         try {
@@ -225,7 +209,7 @@ app.post('/api/registro', async (req, res) => {
 
     } catch (err) {
         console.error("Error al registrar:", err);
-        res.status(500).json({ exito: false, error: "Error en base de datos: " + err.message });
+        res.status(500).json({ exito: false, error: "Error en base de datos PostgreSQL: " + err.message });
     }
 });
 
@@ -238,17 +222,20 @@ app.post('/api/verificar', async (req, res) => {
         if (!correo || !codigo) return res.status(400).json({ exito: false, error: "Parámetros ausentes." });
 
         const correoLimpio = correo.toLowerCase().trim();
-        const usuario = await Usuario.findOne({ correo: correoLimpio });
+        const userRes = await pool.query('SELECT * FROM usuarios WHERE correo_corporativo = $1', [correoLimpio]);
         
-        if (!usuario) return res.status(404).json({ exito: false, error: "Entidad jurídica no encontrada." });
+        if (userRes.rows.length === 0) return res.status(404).json({ exito: false, error: "Entidad jurídica no encontrada." });
 
-        if (usuario.codigo_verificacion !== codigo.trim()) {
+        const usuario = userRes.rows[0];
+
+        if (usuario.codigo_otp !== codigo.trim()) {
             return res.status(400).json({ exito: false, error: "El token OTP ingresado es incorrecto o expiró." });
         }
 
-        usuario.estado = "VERIFICADO";
-        usuario.codigo_verificacion = null;
-        await usuario.save();
+        await pool.query(
+            "UPDATE usuarios SET estado_usuario = 'VERIFICADO', codigo_otp = NULL WHERE id_usuario = $1",
+            [usuario.id_usuario]
+        );
 
         res.json({ exito: true, mensaje: "¡Identidad validada y activa en la red ferretera!" });
     } catch (error) {
@@ -265,22 +252,35 @@ app.post('/api/login', async (req, res) => {
         if(!correo || !contrasena) return res.status(400).json({ exito: false, error: "Las credenciales no pueden estar en blanco." });
         
         const correoLimpio = correo.toLowerCase().trim();
-        const usuario = await Usuario.findOne({ correo: correoLimpio, contrasena: contrasena.trim() });
+        const userRes = await pool.query(
+            'SELECT u.*, r.nombre_rol FROM usuarios u LEFT JOIN roles r ON u.id_rol = r.id_rol WHERE u.correo_corporativo = $1 AND u.contrasena_hash = $2',
+            [correoLimpio, contrasena.trim()]
+        );
         
-        if (!usuario) {
+        if (userRes.rows.length === 0) {
             return res.status(401).json({ exito: false, error: "Acceso denegado. Credenciales incorrectas." });
         }
 
-        if (usuario.estado !== 'VERIFICADO') {
+        const usuario = userRes.rows[0];
+
+        if (usuario.estado_usuario !== 'VERIFICADO' && usuario.estado_usuario !== 'ACTIVO') {
             return res.status(403).json({ 
                 exito: false, 
                 error: "El perfil aún no completa la verificación del token OTP.", 
                 requiere_verificacion: true, 
-                correo: usuario.correo 
+                correo: usuario.correo_corporativo 
             });
         }
 
-        res.json({ exito: true, usuario });
+        res.json({ 
+            exito: true, 
+            usuario: {
+                correo: usuario.correo_corporativo,
+                rol: usuario.id_rol === 2 ? 'PROVEEDOR' : 'COMPRADOR',
+                nombre: usuario.correo_corporativo.split('@')[0],
+                estado: usuario.estado_usuario
+            } 
+        });
     } catch (error) {
         res.status(500).json({ exito: false, error: "Error en el subproceso del Login." });
     }
@@ -291,10 +291,19 @@ app.post('/api/login', async (req, res) => {
 // =========================================================================
 app.get('/api/productos', async (req, res) => {
     try {
-        const productos = await Producto.find();
-        res.json(productos);
+        const result = await pool.query(`
+            SELECT p.id_producto, p.nombre_articulo, p.precio_mayorista_usd AS precio_mayorista,
+                   p.stock_disponible, COALESCE(c.nombre_categoria, 'Fontanería') AS categoria, 
+                   p.imagen_url, 'Distribuidora Mayorista Industrial' AS creado_por
+            FROM productos p
+            LEFT JOIN subcategorias s ON p.id_subcategoria = s.id_subcategoria
+            LEFT JOIN categorias c ON s.id_categoria = c.id_categoria
+            WHERE p.estado_activo = true
+            ORDER BY p.id_producto ASC
+        `);
+        res.json(result.rows);
     } catch (e) {
-        res.status(500).json({ error: "No se pudo recuperar la matriz de insumos ferreteros." });
+        res.status(500).json({ error: "No se pudo recuperar la matriz de insumos ferreteros desde PostgreSQL." });
     }
 });
 
@@ -309,8 +318,8 @@ app.post('/api/productos', async (req, res) => {
             return res.status(400).json({ exito: false, error: "Esquema del producto ferretero incompleto." });
         }
 
-        const maxProd = await Producto.findOne().sort('-id_producto');
-        const nuevoId = maxProd ? maxProd.id_producto + 1 : 1;
+        const maxRes = await pool.query('SELECT MAX(id_producto) FROM productos');
+        const nuevoId = (maxRes.rows[0].max || 0) + 1;
         const firmaUnica = `&sig=${nuevoId}`;
         let finalImg = "https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&w=600&q=80" + firmaUnica;
         
@@ -318,15 +327,18 @@ app.post('/api/productos', async (req, res) => {
             finalImg = imagen_url.trim() + (imagen_url.includes('?') ? firmaUnica : "?" + firmaUnica);
         }
 
-        const nuevoProducto = await Producto.create({
-            id_producto: nuevoId,
-            nombre_articulo: nombre_articulo.trim(),
-            precio_mayorista: Math.abs(Number(precio_mayorista)),
-            stock_disponible: Math.abs(parseInt(stock_disponible)),
+        const sku = 'SKU-' + nuevoId;
+        const insertRes = await pool.query(`
+            INSERT INTO productos (id_empresa_proveedor, id_subcategoria, id_marca, codigo_sku, nombre_articulo, precio_mayorista_usd, stock_disponible, imagen_url)
+            VALUES (1, 1, 1, $1, $2, $3, $4, $5)
+            RETURNING id_producto, nombre_articulo, precio_mayorista_usd AS precio_mayorista, stock_disponible, imagen_url
+        `, [sku, nombre_articulo.trim(), Math.abs(Number(precio_mayorista)), Math.abs(parseInt(stock_disponible)), finalImg]);
+
+        const nuevoProducto = {
+            ...insertRes.rows[0],
             categoria,
-            imagen_url: finalImg,
             creado_por: creado_por || "Distribuidor Autorizado"
-        });
+        };
         
         console.log(`[INVENTARIO NUBE] Nuevo artículo ferretero inyectado: ${nuevoProducto.nombre_articulo}`);
         res.json({ exito: true, producto: nuevoProducto });
@@ -336,9 +348,10 @@ app.post('/api/productos', async (req, res) => {
 });
 
 // =========================================================================
-// 6. ENDPOINT: PROCESAMIENTO LOGÍSTICO Y CONTROL DE CONCURRENCIA
+// 6. ENDPOINT: PROCESAMIENTO LOGÍSTICO Y CONTROL DE CONCURRENCIA ACID
 // =========================================================================
 app.post('/api/pedidos', async (req, res) => {
+    const client = await pool.connect();
     try {
         const { id_comprador, items, subtotal_neto, iva_15, total_neto, terminos_pago, email_despacho, direccion, telefono } = req.body;
         
@@ -349,40 +362,55 @@ app.post('/api/pedidos', async (req, res) => {
         const dirDestino = direccion ? direccion.trim() : "Managua, Nicaragua (Despacho Central)";
         const telContacto = telefono ? telefono.replace(/[\s-]/g, '') : "22220000";
 
-        // CONTROL ATÓMICO DE CONCURRENCIA (RESERVA EN ALMACÉN)
+        await client.query('BEGIN'); // CONTROL ATÓMICO DE CONCURRENCIA ACID
+
+        // Bloqueo pesimista de stock por producto
         for (const item of items) {
-            const prod = await Producto.findOne({ id_producto: item.id_producto });
-            if (!prod) return res.status(400).json({ exito: false, error: `Artículo #${item.id_producto} no existe en inventario.` });
-            if (prod.stock_disponible < item.cantidad) {
-                return res.status(400).json({ exito: false, error: `Stock insuficiente para: ${prod.nombre_articulo}.` });
+            const prodRes = await client.query('SELECT stock_disponible, nombre_articulo FROM productos WHERE id_producto = $1 FOR UPDATE', [item.id_producto]);
+            if (prodRes.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ exito: false, error: `Artículo #${item.id_producto} no existe en inventario.` });
+            }
+            if (prodRes.rows[0].stock_disponible < item.cantidad) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ exito: false, error: `Stock insuficiente para: ${prodRes.rows[0].nombre_articulo}.` });
             }
         }
 
         // Deducción en bodega
         for (const item of items) {
-            const prod = await Producto.findOne({ id_producto: item.id_producto });
-            prod.stock_disponible -= item.cantidad;
-            await prod.save();
+            await client.query('UPDATE productos SET stock_disponible = stock_disponible - $1 WHERE id_producto = $2', [item.cantidad, item.id_producto]);
         }
 
         const calcSubtotal = subtotal_neto ? Number(subtotal_neto) : items.reduce((acc, i) => acc + (i.precio_mayorista * i.cantidad), 0);
         const calcIva = iva_15 ? Number(iva_15) : (calcSubtotal * 0.15);
         const calcTotal = total_neto ? Number(total_neto) : (calcSubtotal + calcIva);
 
-        const totalPedidos = await Pedido.countDocuments();
-        const nuevoPedido = await Pedido.create({ 
-            id_pedido: totalPedidos + 1, 
-            id_comprador, 
-            items, 
+        const countOrd = await client.query('SELECT COUNT(*) FROM ordenes');
+        const idNuevoPedido = parseInt(countOrd.rows[0].count) + 1;
+        const codigoOrden = 'SN-2026-' + (1000 + idNuevoPedido);
+
+        await client.query(`
+            INSERT INTO ordenes (codigo_orden, subtotal_neto, impuesto_iva, total_neto, metodo_pago, email_despacho)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        `, [codigoOrden, calcSubtotal, calcIva, calcTotal, terminos_pago || 'TRANSFERENCIA', email_despacho.toLowerCase().trim()]);
+
+        await client.query('COMMIT');
+        client.release();
+
+        const nuevoPedido = {
+            id_pedido: idNuevoPedido,
+            id_comprador,
+            items,
             subtotal_neto: calcSubtotal,
             iva_15: calcIva,
-            total_neto: calcTotal, 
-            terminos_pago, 
-            email_despacho: email_despacho.toLowerCase().trim(), 
-            direccion: dirDestino, 
-            telefono: telContacto, 
-            fecha: new Date().toLocaleString() 
-        });
+            total_neto: calcTotal,
+            terminos_pago,
+            email_despacho: email_despacho.toLowerCase().trim(),
+            direccion: dirDestino,
+            telefono: telContacto,
+            fecha: new Date().toLocaleString()
+        };
 
         // ENVÍO DE COMPROBANTE SMTP
         const canalSmtp = configurarTransporterB2B();
@@ -438,7 +466,7 @@ app.post('/api/pedidos', async (req, res) => {
                         </div>
                         <div style="text-align:center; font-size:10px; color:#a0aec0; margin-top:35px; border-top:1px solid #edf2f7; padding-top:15px; font-weight:600;">
                             Ingeniería de Software I - UNI Nicaragua<br>
-                            Henry Isaac Lechado Moreno
+                            Henry Isaac Lechado Moreno &copy; 2026
                         </div>
                     </div>
                 `;
@@ -459,7 +487,9 @@ app.post('/api/pedidos', async (req, res) => {
             { banco: "Banco BANPRO", cuenta: "10022341054", moneda: "Dólares (USD)", tipo: "Cuenta de Ahorros" }
         ] });
     } catch (err) {
-        res.status(500).json({ exito: false, error: "Fallo sistémico al asimilar la orden." });
+        await client.query('ROLLBACK');
+        client.release();
+        res.status(500).json({ exito: false, error: "Fallo sistémico al asimilar la orden: " + err.message });
     }
 });
 
@@ -472,7 +502,8 @@ app.post('/api/ia-asistente', async (req, res) => {
         if (!mensaje) return res.status(400).json({ error: "Mensaje vacío." });
         
         const msg = mensaje.toLowerCase().trim();
-        const productosEnBd = await Producto.find().limit(20);
+        const productosRes = await pool.query('SELECT id_producto, nombre_articulo, precio_mayorista_usd AS precio_mayorista, stock_disponible FROM productos LIMIT 20');
+        const productosEnBd = productosRes.rows;
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
         if (GEMINI_API_KEY) {
