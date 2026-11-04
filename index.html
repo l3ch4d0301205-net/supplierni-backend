@@ -58,13 +58,13 @@
                 <h3 class="text-base font-bold text-slate-800 border-b pb-1">Acceso Portal Ferretero</h3>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Corporativo:</label>
-                    <input type="email" id="login-correo" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50 font-medium text-slate-800" placeholder="usuario@ferreteria.com">
+                    <input type="email" id="login-correo" name="username" autocomplete="username" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50 font-medium text-slate-800" placeholder="usuario@ferreteria.com">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña de Acceso:</label>
-                    <input type="password" id="login-pass" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50">
+                    <input type="password" id="login-pass" name="password" autocomplete="current-password" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50">
                 </div>
-                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-sm transition-all tracking-wide">AUTENTICAR EN SERVIDOR</button>
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-sm transition-all tracking-wide">INICIAR SESIÓN</button>
                 <p class="text-xs text-center text-slate-500 pt-2">¿Empresa nueva en la red? <button type="button" onclick="cambiarFormularioAuth('registro')" class="text-emerald-500 font-bold hover:underline">Registrar Ferretería o Distribuidor</button></p>
             </form>
 
@@ -73,15 +73,15 @@
                 <h3 class="text-base font-bold text-slate-800 border-b pb-1">Registro de Razón Social</h3>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre Comercial del Negocio:</label>
-                    <input type="text" id="reg-nombre" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50" placeholder="Ej: Ferretería El Progreso / FETESA">
+                    <input type="text" id="reg-nombre" autocomplete="organization" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50" placeholder="Ej: Ferretería El Progreso / FETESA">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Correo Electrónico Corporativo:</label>
-                    <input type="email" id="reg-correo" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50" placeholder="ventas@ferreteria.com">
+                    <input type="email" id="reg-correo" autocomplete="email" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50" placeholder="ventas@ferreteria.com">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Contraseña:</label>
-                    <input type="password" id="reg-pass" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50">
+                    <input type="password" id="reg-pass" autocomplete="new-password" minlength="6" required class="w-full p-3 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none bg-slate-50">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Rol Operativo Institucional:</label>
@@ -90,7 +90,7 @@
                         <option value="PROVEEDOR">Distribuidor Mayorista (Casa Comercial / Importador)</option>
                     </select>
                 </div>
-                <button type="submit" class="w-full animate-tornasol-btn text-white font-bold py-3 rounded-xl shadow-md text-sm tracking-wide">EJECUTAR REGISTRO ALGORÍTMICO</button>
+                <button type="submit" class="w-full animate-tornasol-btn text-white font-bold py-3 rounded-xl shadow-md text-sm tracking-wide">CREAR CUENTA</button>
                 <p class="text-xs text-center text-slate-500 pt-2">¿Ya pertenece a la red? <button type="button" onclick="cambiarFormularioAuth('login')" class="text-slate-900 font-bold hover:underline">Volver al Login</button></p>
             </form>
 
@@ -146,6 +146,10 @@
                             <button onclick="filtrarPorCategoria('Electricidad')" id="cat-btn-Electricidad" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all">Electricidad</button>
                         </div>
 
+                        <div class="bg-white/80 rounded-xl p-3 border mb-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+                            <input type="search" id="buscar-productos" oninput="renderizarGridProductos()" placeholder="🔎 Buscar martillos, tuberías, cemento..." class="w-full sm:max-w-md p-2.5 rounded-lg border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                            <span id="resumen-inventario" class="text-xs text-slate-600 font-bold whitespace-nowrap"></span>
+                        </div>
                         <div id="grid-productos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
                     </div>
 
@@ -196,8 +200,9 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Formulario de Inyección Física -->
                     <div class="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200 h-fit">
-                        <h2 class="text-base font-black text-slate-900 mb-4 border-b pb-2 uppercase tracking-wide">Indexar Producto al Catálogo Ferretero</h2>
-                        <form onsubmit="registrarProductoCatalogo(event)" class="space-y-4">
+                        <h2 id="titulo-form-producto" class="text-base font-black text-slate-900 mb-4 border-b pb-2 uppercase tracking-wide">Agregar producto al inventario</h2>
+                        <form id="form-producto" onsubmit="registrarProductoCatalogo(event)" class="space-y-4">
+                            <input type="hidden" id="prod-edit-id">
                             <div>
                                 <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Categoría Técnica:</label>
                                 <select id="prod-cat" class="w-full p-3 border rounded-xl bg-white text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 font-medium">
@@ -225,24 +230,26 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Costo Neto (USD):</label>
-                                    <input type="number" step="0.01" id="prod-precio" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-center font-bold" placeholder="0.00">
+                                    <input type="number" step="0.01" id="prod-precio" min="0.01" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-center font-bold" placeholder="0.00">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Disponible:</label>
-                                    <input type="number" id="prod-stock" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-center font-bold" placeholder="0">
+                                    <input type="number" id="prod-stock" min="0" step="1" required class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-center font-bold" placeholder="0">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL Fotografía del Artículo:</label>
                                 <input type="url" id="prod-img" class="w-full p-3 border rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400 bg-slate-50 text-xs text-slate-600 font-mono" placeholder="https://ejemplo.com/producto.jpg">
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-xs tracking-wider uppercase transition-all">INYECTAR PRODUCTO EN BASE DE DATOS</button>
+                            <button id="btn-guardar-producto" type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl shadow-md text-xs tracking-wider uppercase transition-all">GUARDAR PRODUCTO</button>
+                            <button id="btn-cancelar-edicion" type="button" onclick="limpiarFormularioProducto()" class="hidden w-full border border-slate-300 bg-white text-slate-700 font-bold py-2 rounded-xl text-xs">CANCELAR EDICIÓN</button>
                         </form>
                     </div>
 
                     <!-- Listado Analítico del Proveedor -->
                     <div class="lg:col-span-2 bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-slate-200">
-                        <h2 class="text-base font-black text-slate-900 mb-4 border-b pb-2 uppercase tracking-wide">Mis Artículos Distribuidos en la Red Mayorista</h2>
+                        <h2 class="text-base font-black text-slate-900 mb-2 border-b pb-2 uppercase tracking-wide">Mis productos e inventario</h2>
+                        <div id="metricas-proveedor" class="grid grid-cols-3 gap-2 text-center mb-4 text-xs"></div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
@@ -251,7 +258,8 @@
                                         <th class="p-3">Artículo Técnico</th>
                                         <th class="p-3">Categoría</th>
                                         <th class="p-3 text-center">Precio Unit.</th>
-                                        <th class="p-3 text-center rounded-r-lg">Stock</th>
+                                        <th class="p-3 text-center">Stock</th>
+                                        <th class="p-3 text-center rounded-r-lg">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabla-productos-proveedor" class="text-slate-700 divide-y font-medium"></tbody>
@@ -318,7 +326,7 @@
     <div id="modal-factura" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div class="text-center border-b pb-4">
-                <span class="text-[9px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-200">Aprobado y Sincronizado</span>
+                <span class="text-[9px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-emerald-200">Pedido registrado</span>
                 <h3 class="text-base font-black text-slate-900 mt-2 tracking-tight">COMPROBANTE B2B DE COMPRA FERRETERA</h3>
                 <p class="text-[10px] font-mono text-slate-400 mt-0.5">Ref: #OCF-2026-<span id="factura-num">000000</span></p>
             </div>
@@ -396,6 +404,48 @@
          ========================================== -->
     <script>
         const API_URL = 'https://supplierni-ferreteria-backend.onrender.com/api';
+        const TOKEN_KEY = 'supplierni_sesion_token';
+        const EMAIL_KEY = 'supplierni_correo_recordado';
+        let tokenSesion = localStorage.getItem(TOKEN_KEY) || '';
+        let productosProveedor = [];
+        function encabezadosAutorizados() {
+            return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenSesion}` };
+        }
+        function escaparHTML(texto) {
+            return String(texto ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
+        function normalizarProducto(p) {
+            return { ...p, precio_mayorista: Number(p.precio_mayorista),
+                stock_disponible: Number(p.stock_disponible) };
+        }
+        async function leerRespuesta(res) {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `Error HTTP ${res.status}`);
+            return data;
+        }
+        async function restaurarSesion() {
+            const email = localStorage.getItem(EMAIL_KEY);
+            if (email) document.getElementById('login-correo').value = email;
+            document.getElementById('login-correo').addEventListener('input', e => {
+                localStorage.setItem(EMAIL_KEY, e.target.value.trim());
+            });
+            if (!tokenSesion) return;
+            try {
+                const res = await fetch(`${API_URL}/sesion`, { headers: encabezadosAutorizados() });
+                const data = await leerRespuesta(res);
+                usuarioSesion = data.usuario;
+                inicializarEntornoPlataforma();
+            } catch (error) {
+                // Si falla la red, no borrar un token potencialmente válido.
+                if (/caducada|inválida|401|403/i.test(error.message)) {
+                    localStorage.removeItem(TOKEN_KEY);
+                    tokenSesion = '';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', restaurarSesion);
         let usuarioSesion = null;
         let correoPendienteVerificacion = '';
         let carrito = [];
@@ -412,7 +462,11 @@
                 : '<svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
 
             toast.className = `flex items-center gap-3 p-3.5 rounded-xl border text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 scale-95 duration-200 pointer-events-auto bg-white/95 backdrop-blur-sm ${fillBg}`;
-            toast.innerHTML = `${iconSvg}<div class="flex-grow">${mensaje}</div>`;
+            toast.innerHTML = iconSvg;
+            const textoToast = document.createElement('div');
+            textoToast.className = 'flex-grow';
+            textoToast.textContent = mensaje;
+            toast.appendChild(textoToast);
             
             container.appendChild(toast);
             setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0', 'scale-95'); }, 10);
@@ -436,28 +490,29 @@
 
         async function ejecutarLogin(event) {
             event.preventDefault();
-            const correo = document.getElementById('login-correo').value.trim();
+            const correo = document.getElementById('login-correo').value.trim().toLowerCase();
             const contrasena = document.getElementById('login-pass').value;
-
+            localStorage.setItem(EMAIL_KEY, correo);
             try {
                 const res = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ correo, contrasena })
                 });
-                const data = await res.json();
-                if(res.ok) {
-                    usuarioSesion = data.usuario;
-                    notificar(`¡Bienvenido a SupplierNi, ${usuarioSesion.nombre}!`);
-                    inicializarEntornoPlataforma();
-                } else {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
                     if (data.requiere_verificacion) {
-                        correoPendienteVerificacion = data.correo;
-                        notificar(data.error, 'error');
+                        correoPendienteVerificacion = data.correo || correo;
                         cambiarFormularioAuth('verificar');
-                    } else { notificar(data.error, 'error'); }
+                    }
+                    throw new Error(data.error || 'No fue posible acceder.');
                 }
-            } catch { notificar("El servidor se está conectando en la nube. Reintente por favor.", 'error'); }
+                tokenSesion = data.token;
+                localStorage.setItem(TOKEN_KEY, tokenSesion);
+                usuarioSesion = data.usuario;
+                document.getElementById('login-pass').value = '';
+                notificar(`Bienvenido, ${usuarioSesion.nombre}. Tu cuenta se conservará al regresar.`);
+                inicializarEntornoPlataforma();
+            } catch (error) { notificar(error.message, 'error'); }
         }
 
         async function ejecutarRegistro(event) {
@@ -480,6 +535,8 @@
                     boxOtp.innerText = `[ENTORNO DE SIMULACIÓN] Código OTP generado: ${data.codigo_simulado}`;
                     boxOtp.classList.remove('hidden');
                     correoPendienteVerificacion = correo;
+                    localStorage.setItem(EMAIL_KEY, correo);
+                    document.getElementById('login-correo').value = correo;
                     cambiarFormularioAuth('verificar');
                 } else { notificar(data.error, 'error'); }
             } catch { notificar("Error de comunicación de red al registrar.", 'error'); }
@@ -498,6 +555,7 @@
                 if(res.ok) {
                     notificar(data.mensaje);
                     document.getElementById('box-otp-visual-uni').classList.add('hidden');
+                    document.getElementById('login-correo').value = correoPendienteVerificacion;
                     cambiarFormularioAuth('login');
                 } else { notificar(data.error, 'error'); }
             } catch { notificar("Error transaccional en el token.", 'error'); }
@@ -559,18 +617,29 @@
         async function sincronizarCatalogoMaestro() {
             try {
                 const res = await fetch(`${API_URL}/productos`);
-                catalogoProductosGlobal = await res.json();
-                renderizarGridProductos();
-            } catch {}
+                catalogoProductosGlobal = (await leerRespuesta(res)).map(normalizarProducto);
+                // Evitar volver a cargar cantidades de un pedido ya cerrado o productos retirados.
+                carrito = carrito.filter(c => catalogoProductosGlobal.some(p => p.id_producto === c.id_producto));
+                actualizarCarritoUI();
+            } catch (error) {
+                notificar(`No se pudo cargar el catálogo: ${error.message}`, 'error');
+            }
         }
 
         function renderizarGridProductos() {
             const grid = document.getElementById('grid-productos');
             grid.innerHTML = '';
 
-            const productosFiltrados = categoriaFiltroActiva === 'TODAS' 
-                ? catalogoProductosGlobal 
-                : catalogoProductosGlobal.filter(p => p.categoria && p.categoria.toLowerCase().includes(categoriaFiltroActiva.toLowerCase()));
+            const busqueda = document.getElementById('buscar-productos').value.trim().toLowerCase();
+            const productosFiltrados = catalogoProductosGlobal.filter(p => {
+                const coincideCategoria = categoriaFiltroActiva === 'TODAS' ||
+                    (p.categoria || '').toLowerCase().includes(categoriaFiltroActiva.toLowerCase());
+                const coincideBusqueda = [p.nombre_articulo, p.categoria, p.creado_por]
+                    .join(' ').toLowerCase().includes(busqueda);
+                return coincideCategoria && coincideBusqueda;
+            });
+            document.getElementById('resumen-inventario').textContent =
+                `${productosFiltrados.length} productos · ${catalogoProductosGlobal.filter(p => p.stock_disponible <= 5).length} con stock bajo`;
 
             if (productosFiltrados.length === 0) {
                 grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 italic bg-white/50 rounded-2xl border border-dashed">No hay artículos ferreteros en la categoría seleccionada.</div>`;
@@ -588,15 +657,16 @@
                 grid.innerHTML += `
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow">
                         <div class="h-40 w-full bg-slate-100 overflow-hidden relative">
-                            <img src="${imgFallback}" alt="Foto" class="h-full w-full object-cover group-hover:scale-102 transition-transform duration-200">
-                            <span class="absolute top-2 left-2 text-[9px] uppercase font-black tracking-wide text-slate-700 bg-white/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full border">${p.categoria || 'Ferretería'}</span>
+                            <img src="${escaparHTML(imgFallback)}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&w=400&q=80'" alt="Foto" class="h-full w-full object-cover group-hover:scale-102 transition-transform duration-200">
+                            <span class="absolute top-2 left-2 text-[9px] uppercase font-black tracking-wide text-slate-700 bg-white/90 backdrop-blur-sm px-2.5 py-0.5 rounded-full border">${escaparHTML(p.categoria || 'Ferretería')}</span>
                         </div>
                         <div class="p-4 flex-grow flex flex-col justify-between">
                             <div>
-                                <h4 class="font-bold text-slate-800 text-sm leading-tight mb-1">${p.nombre_articulo}</h4>
-                                <p class="text-[10px] text-slate-400 font-medium mb-2">Proveedor: ${p.creado_por || 'Distribuidor Central'}</p>
+                                <h4 class="font-bold text-slate-800 text-sm leading-tight mb-1">${escaparHTML(p.nombre_articulo)}</h4>
+                                <p class="text-[10px] text-slate-400 font-medium mb-2">Proveedor: ${escaparHTML(p.creado_por || 'Distribuidor Central')}</p>
                                 <p class="text-emerald-600 font-black text-lg my-1">$${p.precio_mayorista.toFixed(2)} <span class="text-xs text-slate-400 font-normal">USD</span></p>
-                                <p class="text-xs text-slate-500 mb-3">Stock en Bodega: <strong class="text-slate-700">${stockDisponibleReal} / ${p.stock_disponible}</strong> uds</p>
+                                <p class="text-xs text-slate-500 mb-3">Stock: <strong class="text-slate-700">${stockDisponibleReal} / ${p.stock_disponible}</strong> uds</p>
+                                ${p.stock_disponible <= 5 ? '<span class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-lg font-bold">⚠ Stock bajo</span>' : ''}
                             </div>
                             <div class="space-y-2 pt-2 border-t border-slate-50">
                                 <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
@@ -607,7 +677,7 @@
                                            oninput="validarLimitesStockInput(this, ${stockDisponibleReal})" 
                                            class="w-14 p-1 border rounded-lg font-bold text-center bg-slate-50 text-slate-800 focus:outline-none" ${estaAgotado ? 'disabled' : ''}>
                                 </div>
-                                <button onclick="inyectarCarrito(${p.id_producto}, '${p.nombre_articulo}', ${p.precio_mayorista}, ${p.stock_disponible})" 
+                                <button onclick="inyectarCarrito(${p.id_producto})" 
                                         id="btn-add-${p.id_producto}"
                                         class="w-full ${estaAgotado ? 'bg-slate-100 text-slate-400 cursor-not-allowed border' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'} py-2 rounded-xl text-xs font-bold transition-all"
                                         ${estaAgotado ? 'disabled' : ''}>
@@ -628,30 +698,23 @@
             }
         }
 
-        function inyectarCarrito(id, nombre, precio, stockMaximoOriginal) {
+        function inyectarCarrito(id) {
+            const producto = catalogoProductosGlobal.find(p => p.id_producto === id);
+            if (!producto) return notificar('El producto ya no está disponible.', 'error');
+            const { nombre_articulo: nombre, precio_mayorista: precio,
+                    stock_disponible: stockMaximoOriginal } = producto;
             const qtyInput = document.getElementById(`input-qty-${id}`);
-            const cantidadSolicitada = parseInt(qtyInput.value) || 0;
-
-            if (cantidadSolicitada <= 0) {
-                notificar("Debe ingresar una cantidad mayor a 0 para añadir a la orden.", "error");
-                return;
-            }
-
+            const cantidadSolicitada = Number(qtyInput?.value);
+            if (!Number.isInteger(cantidadSolicitada) || cantidadSolicitada <= 0)
+                return notificar('Ingrese una cantidad entera mayor que cero.', 'error');
             const existente = carrito.find(item => item.id_producto === id);
-            const cantEnCarAct = existente ? existente.cantidad : 0;
-            const limiteMaximoPermitido = stockMaximoOriginal - cantEnCarAct;
-
-            if (cantidadSolicitada > limiteMaximoPermitido) {
-                notificar(`Existencias insuficientes. Solo puede añadir un máximo de ${limiteMaximoPermitido} unidades.`, 'error');
-                return;
-            }
-
-            if(existente) {
-                existente.cantidad += cantidadSolicitada;
-            } else {
-                carrito.push({ id_producto: id, nombre_articulo: nombre, precio_mayorista: precio, cantidad: cantidadSolicitada });
-            }
-            notificar(`Se añadieron ${cantidadSolicitada} unidad(es) de ${nombre}`);
+            const actual = existente ? existente.cantidad : 0;
+            if (cantidadSolicitada > stockMaximoOriginal - actual)
+                return notificar('Stock insuficiente para ese artículo.', 'error');
+            if (existente) existente.cantidad += cantidadSolicitada;
+            else carrito.push({ id_producto: id, nombre_articulo: nombre,
+                precio_mayorista: precio, cantidad: cantidadSolicitada });
+            notificar(`Se agregaron ${cantidadSolicitada} unidad(es) de ${nombre}.`);
             actualizarCarritoUI();
         }
 
@@ -674,7 +737,7 @@
                 container.innerHTML += `
                     <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                         <div class="flex-grow pr-1">
-                            <span class="font-bold text-slate-800 text-[11px] block leading-tight">${item.nombre_articulo}</span>
+                            <span class="font-bold text-slate-800 text-[11px] block leading-tight">${escaparHTML(item.nombre_articulo)}</span>
                             <div class="text-[10px] text-slate-400 font-mono mt-0.5">Cant: ${item.cantidad} x $${item.precio_mayorista.toFixed(2)}</div>
                         </div>
                         <div class="flex items-center space-x-2">
@@ -735,7 +798,7 @@
             try {
                 const res = await fetch(`${API_URL}/pedidos`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: encabezadosAutorizados(),
                     body: JSON.stringify({ 
                         id_comprador: usuarioSesion.nombre, 
                         items: carrito, 
@@ -750,21 +813,23 @@
                 
                 if(res.ok) {
                     document.getElementById('modal-email-factura').classList.add('hidden');
-                    notificar(`¡Factura digital enviada con éxito a ${emailTarget}!`, 'exito');
+                    notificar(data.correo_enviado
+                        ? `Pedido registrado y comprobante enviado a ${emailTarget}.`
+                        : 'Pedido registrado en PostgreSQL. El correo no pudo confirmarse.');
 
-                    document.getElementById('factura-num').innerText = Math.floor(100000 + Math.random() * 900000);
+                    document.getElementById('factura-num').innerText = data.pedido?.id_pedido || 'CONFIRMADO';
                     document.getElementById('factura-cliente').innerText = usuarioSesion.nombre;
                     document.getElementById('factura-metodo').innerText = metodoPagoSelected;
                     document.getElementById('factura-fecha').innerText = new Date().toLocaleString();
                     document.getElementById('factura-subtotal').innerText = subtotal.toFixed(2);
                     document.getElementById('factura-iva').innerText = iva.toFixed(2);
                     document.getElementById('factura-total').innerText = total.toFixed(2);
-                    document.getElementById('factura-envio-correo').innerText = emailTarget;
+                    document.getElementById('factura-envio-correo').innerText = data.correo_enviado ? emailTarget : 'No confirmado';
                     
                     const boxFacturaItems = document.getElementById('factura-items');
                     boxFacturaItems.innerHTML = '';
                     carrito.forEach(i => {
-                        boxFacturaItems.innerHTML += `<div class="flex justify-between"><span>• ${i.nombre_articulo} (x${i.cantidad})</span><span>$${(i.precio_mayorista * i.cantidad).toFixed(2)}</span></div>`;
+                        boxFacturaItems.innerHTML += `<div class="flex justify-between"><span>• ${escaparHTML(i.nombre_articulo)} (x${i.cantidad})</span><span>$${(i.precio_mayorista * i.cantidad).toFixed(2)}</span></div>`;
                     });
 
                     const boxCuentas = document.getElementById('lista-cuentas-bancarias');
@@ -791,71 +856,106 @@
             document.getElementById('modal-factura').classList.add('hidden');
             carrito = [];
             actualizarCarritoUI();
+            sincronizarCatalogoMaestro();
         }
 
+        function limpiarFormularioProducto() {
+            document.getElementById('form-producto').reset();
+            document.getElementById('prod-edit-id').value = '';
+            document.getElementById('titulo-form-producto').textContent = 'Agregar producto al inventario';
+            document.getElementById('btn-guardar-producto').textContent = 'GUARDAR PRODUCTO';
+            document.getElementById('btn-cancelar-edicion').classList.add('hidden');
+        }
+        function editarProducto(id) {
+            const p = productosProveedor.find(prod => prod.id_producto === id);
+            if (!p) return notificar('Producto no encontrado.', 'error');
+            document.getElementById('prod-edit-id').value = id;
+            document.getElementById('prod-cat').value = p.categoria;
+            document.getElementById('prod-nombre').value = p.nombre_articulo;
+            document.getElementById('prod-medida').value = '';
+            document.getElementById('prod-marca').value = '';
+            document.getElementById('prod-precio').value = p.precio_mayorista;
+            document.getElementById('prod-stock').value = p.stock_disponible;
+            document.getElementById('prod-img').value = p.imagen_url || '';
+            document.getElementById('titulo-form-producto').textContent = 'Editar producto #' + id;
+            document.getElementById('btn-guardar-producto').textContent = 'GUARDAR CAMBIOS';
+            document.getElementById('btn-cancelar-edicion').classList.remove('hidden');
+            document.getElementById('form-producto').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        async function eliminarProducto(id) {
+            const p = productosProveedor.find(prod => prod.id_producto === id);
+            if (!p || !confirm(`¿Eliminar del catálogo "${p.nombre_articulo}"?`)) return;
+            try {
+                const res = await fetch(`${API_URL}/productos/${id}`, {
+                    method: 'DELETE', headers: encabezadosAutorizados()
+                });
+                await leerRespuesta(res);
+                notificar('Producto eliminado del catálogo.');
+                limpiarFormularioProducto();
+                await sincronizarProductosExclusivosProveedor();
+            } catch (error) { notificar(error.message, 'error'); }
+        }
         async function registrarProductoCatalogo(e) {
             e.preventDefault();
-            const categoria = document.getElementById('prod-cat').value;
-            let nombre_articulo = document.getElementById('prod-nombre').value.trim();
+            const editarId = document.getElementById('prod-edit-id').value;
+            const nombre = document.getElementById('prod-nombre').value.trim();
             const medida = document.getElementById('prod-medida').value.trim();
             const marca = document.getElementById('prod-marca').value.trim();
-            const precio_mayorista = document.getElementById('prod-precio').value;
-            const stock_disponible = document.getElementById('prod-stock').value;
-            const imagen_url = document.getElementById('prod-img').value.trim();
-
-            if (medida || marca) {
-                let detalles = [medida, marca].filter(Boolean).join(' - ');
-                nombre_articulo += ` (${detalles})`;
-            }
-
+            const detalle = [medida, marca].filter(Boolean).join(' - ');
+            const payload = {
+                categoria: document.getElementById('prod-cat').value,
+                nombre_articulo: nombre + (detalle ? ` (${detalle})` : ''),
+                precio_mayorista: Number(document.getElementById('prod-precio').value),
+                stock_disponible: Number(document.getElementById('prod-stock').value),
+                imagen_url: document.getElementById('prod-img').value.trim()
+            };
+            if (!payload.nombre_articulo || !(payload.precio_mayorista > 0) ||
+                !Number.isInteger(payload.stock_disponible) || payload.stock_disponible < 0)
+                return notificar('Revise el nombre, precio y stock del artículo.', 'error');
+            const boton = document.getElementById('btn-guardar-producto');
+            boton.disabled = true;
             try {
-                const res = await fetch(`${API_URL}/productos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        nombre_articulo, precio_mayorista, stock_disponible, categoria, imagen_url,
-                        creado_por: usuarioSesion.nombre 
-                    })
+                const res = await fetch(`${API_URL}/productos${editarId ? '/' + editarId : ''}`, {
+                    method: editarId ? 'PUT' : 'POST', headers: encabezadosAutorizados(),
+                    body: JSON.stringify(payload)
                 });
-                if(res.ok) {
-                    notificar(`¡${nombre_articulo} indexado con éxito en bodega!`);
-                    document.getElementById('prod-nombre').value = '';
-                    document.getElementById('prod-medida').value = '';
-                    document.getElementById('prod-marca').value = '';
-                    document.getElementById('prod-precio').value = '';
-                    document.getElementById('prod-stock').value = '';
-                    document.getElementById('prod-img').value = '';
-                    sincronizarProductosExclusivosProveedor();
-                }
-            } catch { notificar("Error al inyectar producto.", 'error'); }
+                await leerRespuesta(res);
+                notificar(editarId ? 'Producto actualizado en PostgreSQL.' : 'Producto agregado a PostgreSQL.');
+                limpiarFormularioProducto();
+                await sincronizarProductosExclusivosProveedor();
+            } catch (error) { notificar(error.message, 'error'); }
+            finally { boton.disabled = false; }
         }
-
         async function sincronizarProductosExclusivosProveedor() {
+            const tabla = document.getElementById('tabla-productos-proveedor');
             try {
                 const res = await fetch(`${API_URL}/productos`);
-                const productos = await res.json();
-                const tabla = document.getElementById('tabla-productos-proveedor');
-                tabla.innerHTML = '';
-
-                const misProductos = productos.filter(p => p.creado_por === usuarioSesion.nombre);
-                
-                if(misProductos.length === 0) {
-                    tabla.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">No ha indexado productos propios todavía. Use el panel lateral.</td></tr>`;
+                const productos = (await leerRespuesta(res)).map(normalizarProducto);
+                productosProveedor = productos.filter(p => p.creado_por_correo === usuarioSesion.correo);
+                const totalUnidades = productosProveedor.reduce((n,p) => n + p.stock_disponible, 0);
+                const bajo = productosProveedor.filter(p => p.stock_disponible <= 5).length;
+                document.getElementById('metricas-proveedor').innerHTML = `
+                    <div class="bg-slate-100 p-2 rounded-xl"><b class="text-lg block">${productosProveedor.length}</b>Productos</div>
+                    <div class="bg-emerald-50 p-2 rounded-xl text-emerald-800"><b class="text-lg block">${totalUnidades}</b>Unidades</div>
+                    <div class="bg-amber-50 p-2 rounded-xl text-amber-800"><b class="text-lg block">${bajo}</b>Stock bajo</div>`;
+                if (!productosProveedor.length) {
+                    tabla.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-500">Aún no hay productos asociados a tu cuenta. Agrega el primero.</td></tr>';
                     return;
                 }
-
-                misProductos.forEach(p => {
-                    tabla.innerHTML += `
-                        <tr class="hover:bg-slate-50 border-b">
-                            <td class="p-3 font-mono text-slate-400 text-[10px]">#00${p.id_producto}</td>
-                            <td class="p-3 font-bold text-slate-800">${p.nombre_articulo}</td>
-                            <td class="p-3 font-semibold text-slate-500">${p.categoria}</td>
-                            <td class="p-3 text-center font-bold text-emerald-600">$${p.precio_mayorista.toFixed(2)}</td>
-                            <td class="p-3 text-center bg-slate-50 font-black text-slate-700">${p.stock_disponible}</td>
-                        </tr>
-                    `;
-                });
-            } catch {}
+                tabla.innerHTML = productosProveedor.map(p => `<tr class="hover:bg-slate-50 border-b">
+                    <td class="p-3 font-mono text-slate-500">#${p.id_producto}</td>
+                    <td class="p-3 font-bold text-slate-800">${escaparHTML(p.nombre_articulo)}</td>
+                    <td class="p-3">${escaparHTML(p.categoria)}</td>
+                    <td class="p-3 text-center font-bold text-emerald-600">$${p.precio_mayorista.toFixed(2)}</td>
+                    <td class="p-3 text-center font-black ${p.stock_disponible <= 5 ? 'text-red-600' : 'text-slate-700'}">${p.stock_disponible}</td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        <button onclick="editarProducto(${p.id_producto})" class="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg font-bold mr-1">Editar</button>
+                        <button onclick="eliminarProducto(${p.id_producto})" class="bg-red-50 text-red-700 px-2 py-1 rounded-lg font-bold">Eliminar</button>
+                    </td></tr>`).join('');
+            } catch (error) {
+                tabla.innerHTML = '<tr><td colspan="6" class="p-4 text-red-600">No fue posible cargar el inventario.</td></tr>';
+                notificar(error.message, 'error');
+            }
         }
 
         async function enviarMensajeIA() {
@@ -864,7 +964,7 @@
             if(!txt) return;
 
             const logs = document.getElementById('chat-logs');
-            logs.innerHTML += `<div class="bg-emerald-500 text-white p-2.5 rounded-2xl max-w-[85%] self-end leading-relaxed shadow-sm font-medium">${txt}</div>`;
+            logs.innerHTML += `<div class="bg-emerald-500 text-white p-2.5 rounded-2xl max-w-[85%] self-end leading-relaxed shadow-sm font-medium">${escaparHTML(txt)}</div>`;
             input.value = '';
             logs.scrollTop = logs.scrollHeight;
 
@@ -876,7 +976,7 @@
                 });
                 const data = await res.json();
                 
-                logs.innerHTML += `<div class="bg-white p-2.5 rounded-2xl max-w-[85%] self-start border shadow-sm text-slate-800 font-medium leading-relaxed">${data.respuesta}</div>`;
+                logs.innerHTML += `<div class="bg-white p-2.5 rounded-2xl max-w-[85%] self-start border shadow-sm text-slate-800 font-medium leading-relaxed">${escaparHTML(data.respuesta)}</div>`;
                 
                 if(data.items && data.items.length > 0) {
                     data.items.forEach(iaItem => {
@@ -900,7 +1000,7 @@
 
                 const sugBox = document.getElementById('box-sugerencias-ia');
                 if(data.sugerencias && data.sugerencias.length > 0) {
-                    sugBox.innerHTML = `🌟 **Sugerencia IA:** Suministros complementarios ferreteros detectados: ` + data.sugerencias.map(s => `<span class="underline">${s.nombre_articulo}</span>`).join(' y ');
+                    sugBox.innerHTML = `🌟 **Sugerencia IA:** Suministros complementarios ferreteros detectados: ` + data.sugerencias.map(s => `<span class="underline">${escaparHTML(s.nombre_articulo)}</span>`).join(' y ');
                     sugBox.classList.remove('hidden');
                 } else {
                     sugBox.classList.add('hidden');
@@ -914,6 +1014,9 @@
 
         function cerrarSesion() {
             usuarioSesion = null;
+            tokenSesion = '';
+            localStorage.removeItem(TOKEN_KEY);
+            document.getElementById('login-pass').value = '';
             carrito = [];
             document.getElementById('seccion-sistema').classList.add('hidden');
             document.getElementById('asistente-chat-ui').classList.add('hidden');
