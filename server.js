@@ -1,19 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-// CONTROLADOR NATIVO DE POSTGRESQL (REEMPLAZA A MONGOOSE COMPLETAMENTE)
 const { Pool } = require('pg');
 
 const app = express();
 
 // =========================================================================
-// CONFIGURACIÓN DE MIDDLEWARES BASE DE RANGO INDUSTRIAL
+// MIDDLEWARES BASE DE RANGO INDUSTRIAL
 // =========================================================================
 app.use(cors());
 app.use(express.json());
 
 // =========================================================================
-// SISTEMA DE MONITOREO Y LOGGING PERSONALIZADO (MIDDLEWARE AUDITOR)
+// SISTEMA DE MONITOREO Y LOGGING PERSONALIZADO
 // =========================================================================
 app.use((req, res, next) => {
     const inicio = Date.now();
@@ -42,7 +41,7 @@ pool.query('SELECT NOW()', (err, res) => {
 });
 
 // =========================================================================
-// MATRIZ DE SEMILLA INICIAL ENRIQUECIDA (SECTOR FERRETERO NICARAGÜENSE)
+// MATRIZ DE SEMILLA INICIAL ENRIQUECIDA
 // =========================================================================
 const inicializarSemilla = async () => {
     try {
@@ -60,13 +59,13 @@ const inicializarSemilla = async () => {
         if (parseInt(countProductos.rows[0].count) === 0) {
             console.log("[SISTEMA] BD Productos vacía. Cargando catálogo ferretero maestro...");
             await pool.query(`
-                INSERT INTO productos (id_empresa_proveedor, id_subcategoria, id_marca, codigo_sku, nombre_articulo, precio_mayorista_usd, stock_disponible, imagen_url) VALUES
-                (1, 1, 1, 'PVC-SCH40-05', 'Tubo PVC Presión 1/2" x 6m Sch 40 (Amanco)', 2.35, 120, 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80&sig=1'),
-                (1, 2, 2, 'HERR-MART-16', 'Martillo de Uña 16oz Truper Profesional', 6.50, 45, 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=600&q=80&sig=2'),
-                (1, 3, 3, 'CEM-CANAL-42', 'Saco de Cemento Canal Estructural (42.5kg)', 8.50, 200, 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&w=600&q=80&sig=3'),
-                (1, 4, 2, 'PERN-GR5-052', 'Perno Grado 5 Zincado 1/2" x 2" (Pack x100)', 4.10, 80, 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80&sig=4'),
-                (1, 2, 2, 'HERR-CINT-5M', 'Cinta Métrica 5m Truper TR-1502', 2.60, 60, 'https://images.unsplash.com/photo-1531842477197-e3f85e40346e?auto=format&fit=crop&w=600&q=80&sig=5'),
-                (1, 3, 3, 'VAR-HIER-38', 'Varilla de Hierro Corrugado 3/8" x 6m', 4.80, 150, 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80&sig=6')
+                INSERT INTO productos (id_empresa_proveedor, id_subcategoria, id_marca, codigo_sku, nombre_articulo, precio_mayorista_usd, stock_disponible, imagen_url, estado_activo) VALUES
+                (1, 1, 1, 'PVC-SCH40-05', 'Tubo PVC Presión 1/2" x 6m Sch 40 (Amanco)', 2.35, 120, 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=600&q=80&sig=1', true),
+                (1, 2, 2, 'HERR-MART-16', 'Martillo de Uña 16oz Truper Profesional', 6.50, 45, 'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=600&q=80&sig=2', true),
+                (1, 3, 3, 'CEM-CANAL-42', 'Saco de Cemento Canal Estructural (42.5kg)', 8.50, 200, 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?auto=format&fit=crop&w=600&q=80&sig=3', true),
+                (1, 4, 2, 'PERN-GR5-052', 'Perno Grado 5 Zincado 1/2" x 2" (Pack x100)', 4.10, 80, 'https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80&sig=4', true),
+                (1, 2, 2, 'HERR-CINT-5M', 'Cinta Métrica 5m Truper TR-1502', 2.60, 60, 'https://images.unsplash.com/photo-1531842477197-e3f85e40346e?auto=format&fit=crop&w=600&q=80&sig=5', true),
+                (1, 3, 3, 'VAR-HIER-38', 'Varilla de Hierro Corrugado 3/8" x 6m', 4.80, 150, 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80&sig=6', true)
             `);
         }
     } catch (err) {
@@ -74,29 +73,16 @@ const inicializarSemilla = async () => {
     }
 };
 
-// =========================================================================
-// COMPUERTA ALGORÍTMICA: VALIDACIONES
-// =========================================================================
 const validarFormatoCorreo = (correo) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(correo);
 };
 
-const validarNumeroTelefonoNicaragua = (telefono) => {
-    if (!telefono) return true; // Opcional si el cliente no lo envía
-    const limpio = telefono.replace(/[\s-]/g, '');
-    const regex = /^[2578]\d{7}$/;
-    return regex.test(limpio);
-};
-
-// =========================================================================
-// CONTROLADOR LOGÍSTICO SMTP ULTRA-COMPATIBLE (BREVO B2B)
-// =========================================================================
 const configurarTransporterB2B = () => {
     return nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
         port: 2525,
-        secure: false, // TLS
+        secure: false,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
@@ -105,9 +91,6 @@ const configurarTransporterB2B = () => {
     });
 };
 
-// =========================================================================
-// COMPUERTA DE ENTRADA AL SERVIDOR Y DIAGNÓSTICO
-// =========================================================================
 app.get('/', async (req, res) => {
     const envUser = process.env.EMAIL_USER ? "CONFIGURADO DE FORMA CORRECTA" : "FALTA ASIGNAR EN ENVIRONMENT";
     const envPass = process.env.EMAIL_PASS ? "CONFIGURADO DE FORMA CORRECTA" : "FALTA ASIGNAR EN ENVIRONMENT";
@@ -126,7 +109,6 @@ app.get('/', async (req, res) => {
             <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
                 <h1 style="color: #10b981; font-weight: 900; letter-spacing: -1px; margin-bottom: 10px;">⚡ API SupplierNi B2B — Red Ferretera</h1>
                 <p style="color: #64748b; font-size: 14px; margin-bottom: 30px;">Microservicio de Enlace Comercial e Ingeniería de Software - UNI Nicaragua.</p>
-                
                 <div style="text-align: left; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #edf2f7; font-size: 12px; font-family: monospace;">
                     <h3 style="margin-top: 0; color: #334155; font-size: 13px; font-family: sans-serif;">🔍 DIAGNÓSTICO DE COMPUERTAS CLOUD</h3>
                     <p>• <strong>BASE DE DATOS:</strong> <span style="color: ${process.env.DATABASE_URL ? '#059669' : '#dc2626'}">${envDbStatus}</span></p>
@@ -142,9 +124,7 @@ app.get('/', async (req, res) => {
     `);
 });
 
-// =========================================================================
 // 1. ENDPOINT: REGISTRO COMERCIAL CON ENVÍO DE TOKEN OTP
-// =========================================================================
 app.post('/api/registro', async (req, res) => {
     try {
         const { correo, contrasena, rol, nombre } = req.body;
@@ -164,17 +144,13 @@ app.post('/api/registro', async (req, res) => {
         }
 
         const tokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Mapear el rol a su ID relacional (1: COMPRADOR, 2: PROVEEDOR)
         const idRol = (rol.toUpperCase() === 'PROVEEDOR') ? 2 : 1;
 
-        // Guardar el usuario en PostgreSQL
         await pool.query(`
             INSERT INTO usuarios (correo_corporativo, contrasena_hash, id_rol, estado_usuario, codigo_otp)
             VALUES ($1, $2, $3, 'PENDIENTE_VERIFICACION', $4)
         `, [correoLimpio, contrasena.trim(), idRol, tokenOTP]);
 
-        // Intentar envío de correo en un bloque seguro para que no bloquee el registro si falla el SMTP
         try {
             const canalSmtp = configurarTransporterB2B();
             if (canalSmtp) {
@@ -200,7 +176,6 @@ app.post('/api/registro', async (req, res) => {
             console.log("[SMTP] Correo no enviado, usando token en pantalla:", errorCorreo.message);
         }
 
-        // Devolver respuesta exitosa al navegador
         res.json({ 
             exito: true, 
             mensaje: "Registro procesado exitosamente.", 
@@ -213,9 +188,7 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// =========================================================================
 // 2. ENDPOINT: VERIFICACIÓN CRIPTOGRÁFICA OTP
-// =========================================================================
 app.post('/api/verificar', async (req, res) => {
     try {
         const { correo, codigo } = req.body;
@@ -243,9 +216,7 @@ app.post('/api/verificar', async (req, res) => {
     }
 });
 
-// =========================================================================
 // 3. ENDPOINT: AUTENTICACIÓN CENTRALIZADA
-// =========================================================================
 app.post('/api/login', async (req, res) => {
     try {
         const { correo, contrasena } = req.body;
@@ -286,70 +257,78 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// =========================================================================
-// 4. ENDPOINT: LECTURA ATÓMICA DEL CATÁLOGO DE SUMINISTROS
-// =========================================================================
+// 4. ENDPOINT: LECTURA ATÓMICA DEL CATÁLOGO DE SUMINISTROS (CORREGIDO)
 app.get('/api/productos', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT p.id_producto, p.nombre_articulo, p.precio_mayorista_usd AS precio_mayorista,
-                   p.stock_disponible, COALESCE(c.nombre_categoria, 'Fontanería') AS categoria, 
-                   p.imagen_url, 'Distribuidora Mayorista Industrial' AS creado_por
+            SELECT p.id_producto, p.nombre_articulo, 
+                   COALESCE(p.precio_mayorista_usd, 0) AS precio_mayorista,
+                   p.stock_disponible, 
+                   COALESCE(c.nombre_categoria, p.categoria, 'Fontanería') AS categoria, 
+                   COALESCE(p.imagen_url, 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&w=600&q=80') AS imagen_url,
+                   COALESCE(p.creado_por, 'Distribuidora Mayorista Industrial') AS creado_por
             FROM productos p
             LEFT JOIN subcategorias s ON p.id_subcategoria = s.id_subcategoria
             LEFT JOIN categorias c ON s.id_categoria = c.id_categoria
-            WHERE p.estado_activo = true
             ORDER BY p.id_producto ASC
         `);
-        res.json(result.rows);
+        
+        const productosFormateados = result.rows.map(prod => ({
+            ...prod,
+            precio_mayorista: Number(prod.precio_mayorista || 0)
+        }));
+
+        res.json(productosFormateados);
     } catch (e) {
+        console.error("Error en GET /api/productos:", e.message);
         res.status(500).json({ error: "No se pudo recuperar la matriz de insumos ferreteros desde PostgreSQL." });
     }
 });
 
-// =========================================================================
-// 5. ENDPOINT: INYECCIÓN MAESTRA DE ARTÍCULOS AUTOGESTIONADOS
-// =========================================================================
+// 5. ENDPOINT: INYECCIÓN MAESTRA DE ARTÍCULOS AUTOGESTIONADOS (CORREGIDO)
 app.post('/api/productos', async (req, res) => {
     try {
         const { nombre_articulo, precio_mayorista, stock_disponible, categoria, imagen_url, creado_por } = req.body;
         
-        if(!nombre_articulo || !precio_mayorista || !stock_disponible || !categoria) {
+        if(!nombre_articulo || !precio_mayorista || !stock_disponible) {
             return res.status(400).json({ exito: false, error: "Esquema del producto ferretero incompleto." });
         }
 
         const maxRes = await pool.query('SELECT MAX(id_producto) FROM productos');
-        const nuevoId = (maxRes.rows[0].max || 0) + 1;
-        const firmaUnica = `&sig=${nuevoId}`;
-        let finalImg = "https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&w=600&q=80" + firmaUnica;
-        
-        if (imagen_url && imagen_url.trim() !== '' && imagen_url.startsWith('http')) {
-            finalImg = imagen_url.trim() + (imagen_url.includes('?') ? firmaUnica : "?" + firmaUnica);
-        }
-
+        const nuevoId = (parseInt(maxRes.rows[0].max) || 0) + 1;
         const sku = 'SKU-' + nuevoId;
+        const finalImg = (imagen_url && imagen_url.trim().startsWith('http')) 
+            ? imagen_url.trim() 
+            : "https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&w=600&q=80";
+
         const insertRes = await pool.query(`
-            INSERT INTO productos (id_empresa_proveedor, id_subcategoria, id_marca, codigo_sku, nombre_articulo, precio_mayorista_usd, stock_disponible, imagen_url)
-            VALUES (1, 1, 1, $1, $2, $3, $4, $5)
-            RETURNING id_producto, nombre_articulo, precio_mayorista_usd AS precio_mayorista, stock_disponible, imagen_url
-        `, [sku, nombre_articulo.trim(), Math.abs(Number(precio_mayorista)), Math.abs(parseInt(stock_disponible)), finalImg]);
+            INSERT INTO productos (codigo_sku, nombre_articulo, precio_mayorista_usd, stock_disponible, imagen_url, estado_activo, categoria, creado_por)
+            VALUES ($1, $2, $3, $4, $5, true, $6, $7)
+            RETURNING id_producto, nombre_articulo, precio_mayorista_usd AS precio_mayorista, stock_disponible, imagen_url, categoria, creado_por
+        `, [
+            sku, 
+            nombre_articulo.trim(), 
+            Math.abs(Number(precio_mayorista)), 
+            Math.abs(parseInt(stock_disponible)), 
+            finalImg,
+            categoria || 'Fontanería',
+            creado_por || 'Distribuidor Autorizado'
+        ]);
 
         const nuevoProducto = {
             ...insertRes.rows[0],
-            categoria,
-            creado_por: creado_por || "Distribuidor Autorizado"
+            precio_mayorista: Number(insertRes.rows[0].precio_mayorista)
         };
         
         console.log(`[INVENTARIO NUBE] Nuevo artículo ferretero inyectado: ${nuevoProducto.nombre_articulo}`);
         res.json({ exito: true, producto: nuevoProducto });
     } catch (error) {
-        res.status(500).json({ exito: false, error: "Fallo crítico al indexar el artículo ferretero." });
+        console.error("Error en POST /api/productos:", error.message);
+        res.status(500).json({ exito: false, error: "Fallo crítico al indexar el artículo ferretero: " + error.message });
     }
 });
 
-// =========================================================================
 // 6. ENDPOINT: PROCESAMIENTO LOGÍSTICO Y CONTROL DE CONCURRENCIA ACID
-// =========================================================================
 app.post('/api/pedidos', async (req, res) => {
     const client = await pool.connect();
     try {
@@ -362,9 +341,8 @@ app.post('/api/pedidos', async (req, res) => {
         const dirDestino = direccion ? direccion.trim() : "Managua, Nicaragua (Despacho Central)";
         const telContacto = telefono ? telefono.replace(/[\s-]/g, '') : "22220000";
 
-        await client.query('BEGIN'); // CONTROL ATÓMICO DE CONCURRENCIA ACID
+        await client.query('BEGIN');
 
-        // Bloqueo pesimista de stock por producto
         for (const item of items) {
             const prodRes = await client.query('SELECT stock_disponible, nombre_articulo FROM productos WHERE id_producto = $1 FOR UPDATE', [item.id_producto]);
             if (prodRes.rows.length === 0) {
@@ -377,7 +355,6 @@ app.post('/api/pedidos', async (req, res) => {
             }
         }
 
-        // Deducción en bodega
         for (const item of items) {
             await client.query('UPDATE productos SET stock_disponible = stock_disponible - $1 WHERE id_producto = $2', [item.cantidad, item.id_producto]);
         }
@@ -412,7 +389,6 @@ app.post('/api/pedidos', async (req, res) => {
             fecha: new Date().toLocaleString()
         };
 
-        // ENVÍO DE COMPROBANTE SMTP
         const canalSmtp = configurarTransporterB2B();
         if (canalSmtp) {
             try {
@@ -493,9 +469,7 @@ app.post('/api/pedidos', async (req, res) => {
     }
 });
 
-// =========================================================================
-// 7. ENDPOINT: NÚCLEO DE INTELIGENCIA ARTIFICIAL FERRETERO (GEMINI + CONTINGENCIA)
-// =========================================================================
+// 7. ENDPOINT: NÚCLEO DE INTELIGENCIA ARTIFICIAL FERRETERO
 app.post('/api/ia-asistente', async (req, res) => {
     try {
         const { mensaje, rol } = req.body;
@@ -540,7 +514,6 @@ app.post('/api/ia-asistente', async (req, res) => {
             }
         }
 
-        // MOTOR DE CONTINGENCIA LOCAL FERRETERO (EXTRAE CANTIDADES Y PRODUCTOS)
         let respuestaText = "";
         let itemsDetectados = [];
         let sugerenciasCruzadas = [];
@@ -592,6 +565,5 @@ app.post('/api/ia-asistente', async (req, res) => {
     }
 });
 
-// ASIGNACIÓN DINÁMICA DE PUERTOS CLOUD
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`[INSTANCIA ACTIVA] Servidor central de SupplierNi B2B operando en el puerto ${PORT}`));
