@@ -158,7 +158,7 @@ app.get('/', (req, res) => {
 });
 
 // =========================================================================
-// 1. ENDPOINT: REGISTRO COMERCIAL CON ENVÍO DE TOKEN OTP
+// 1. ENDPOINT: REGISTRO COMERCIAL CON ENVÍO DE TOKEN OTP (CORREGIDO)
 // =========================================================================
 app.post('/api/registro', async (req, res) => {
     try {
@@ -180,6 +180,7 @@ app.post('/api/registro', async (req, res) => {
 
         const tokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
+        // Guardar el usuario en MongoDB
         await Usuario.create({
             correo: correoLimpio,
             contrasena: contrasena.trim(),
@@ -189,18 +190,18 @@ app.post('/api/registro', async (req, res) => {
             codigo_verificacion: tokenOTP
         });
 
-        const canalSmtp = configurarTransporterB2B();
-        if (canalSmtp) {
-            try {
+        // Intentar envío de correo en un bloque seguro para que no bloquee el registro si falla el SMTP
+        try {
+            const canalSmtp = configurarTransporterB2B();
+            if (canalSmtp) {
                 const htmlOtp = `
                     <div style="font-family:'Segoe UI',sans-serif; max-width:500px; margin:0 auto; padding:30px; border:1px solid #e2e8f0; border-radius:24px; text-align:center;">
                         <h2 style="color:#0f172a; margin-top:0; letter-spacing:-1px;">Código de Verificación SupplierNi</h2>
                         <p style="color:#64748b; font-size:14px;">Hola <strong>${nombre}</strong>,</p>
-                        <p style="color:#64748b; font-size:14px;">Tu token criptográfico para activar tu cuenta de comercio ferretero es:</p>
+                        <p style="color:#64748b; font-size:14px;">Tu token para activar tu cuenta ferretera es:</p>
                         <div style="margin:30px 0;">
                             <span style="background:#f8fafc; border:1px solid #edf2f7; color:#10b981; font-size:32px; font-weight:900; letter-spacing:8px; padding:15px 25px; border-radius:12px;">${tokenOTP}</span>
                         </div>
-                        <p style="color:#a0aec0; font-size:12px;">Ingresa este código en la plataforma para verificar tu Razón Social.</p>
                     </div>
                 `;
 
@@ -210,14 +211,21 @@ app.post('/api/registro', async (req, res) => {
                     subject: `🔐 Código de Acceso SupplierNi: ${tokenOTP}`,
                     html: htmlOtp
                 });
-                console.log(`[SMTP PROCESADO] Correo OTP enviado a ${correoLimpio}`);
-            } catch (errorSmtp) {
-                console.error(`[FALLO SMTP OTP] Error al enviar correo: ${errorSmtp.message}`);
             }
+        } catch (errorCorreo) {
+            console.log("[SMTP] Correo no enviado, usando token en pantalla:", errorCorreo.message);
         }
-        res.json({ exito: true, mensaje: "Registro procesado exitosamente.", codigo_simulado: tokenOTP });
+
+        // Devolver respuesta exitosa al navegador
+        res.json({ 
+            exito: true, 
+            mensaje: "Registro procesado exitosamente.", 
+            codigo_simulado: tokenOTP 
+        });
+
     } catch (err) {
-        res.status(500).json({ exito: false, error: "Fallo en el subproceso de registro." });
+        console.error("Error al registrar:", err);
+        res.status(500).json({ exito: false, error: "Error en base de datos: " + err.message });
     }
 });
 
